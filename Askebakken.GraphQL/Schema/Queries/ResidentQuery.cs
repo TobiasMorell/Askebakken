@@ -9,9 +9,9 @@ namespace Askebakken.GraphQL.Schema.Queries;
 public class ResidentQuery
 {
     [Authorize]
-    public Task<Resident> GetMe([Service] IUserService userService)
+    public async Task<Resident> GetMe([Service] IUserService userService)
     {
-        var user = userService.GetAuthenticatedUser();
+        var user = await userService.GetAuthenticatedUser();
         if (user is null)
         {
             throw new UnauthorizedAccessException();
@@ -30,8 +30,8 @@ public class ResidentQuery
         return collection.AsExecutable();
     }
 
-    [UseFirstOrDefault]
     [Authorize]
+    [UseFirstOrDefault]
     public IExecutable<Resident> GetResidentById(
         [Service] IMongoCollection<Resident> collection,
         Guid id)

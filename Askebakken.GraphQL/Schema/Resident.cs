@@ -11,6 +11,8 @@ public class Resident : SchemaBase
     public string? LastName { get; set; }
     public string HouseNumber { get; set; }
 
+    public IList<string> Roles { get; set; }
+
     public ICollection<Guid> WeekPlanIds { get; set; }
     [BsonIgnore]
     public ICollection<WeekPlan> WeekPlans { get; set; }
@@ -43,6 +45,7 @@ public class ResidentType : ObjectType<Resident>
     protected override void Configure(IObjectTypeDescriptor<Resident> descriptor)
     {
         descriptor.Field(u => u.PasswordHash).Ignore();
+        descriptor.Field(u => u.Roles).Ignore();
 
         descriptor.Field(u => u.WeekPlanIds).IsProjected();
         descriptor.Field(u => u.ParticipatesInIds).IsProjected();

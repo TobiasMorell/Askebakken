@@ -1,3 +1,4 @@
+using HotChocolate.Authorization;
 using MongoDB.Driver;
 
 namespace Askebakken.GraphQL.Schema.Mutations;
@@ -11,6 +12,7 @@ public class RecipeMutationType
 [ExtendObjectType("Mutation")]
 public class RecipeMutations
 {
+    [Authorize]
     public async Task<Recipe> CreateRecipe([Service] IMongoCollection<Recipe> collection, RecipeMutationType recipe)
     {
         var actual = new Recipe()
