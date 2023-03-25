@@ -6,6 +6,7 @@ using System.Text;
 using Askebakken.GraphQL.Options;
 using Askebakken.GraphQL.Schema.Errors;
 using Askebakken.GraphQL.Services.PasswordHasher;
+using HotChocolate.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 
@@ -31,6 +32,7 @@ public class AuthenticateInput
 public class ResidentMutations
 {
     [Error<UsernameAlreadyTakenError>]
+    [Authorize(Roles = new [] { "Admin"})]
     public async Task<Resident> CreateResident([Service] IMongoCollection<Resident> collection, [Service] IPasswordHasher passwordHasher, CreateResidentInput resident)
     {
         var existingUser = await collection.FindAsync(u => u.Username == resident.Username);
@@ -75,7 +77,7 @@ public class ResidentMutations
             {
                 new Claim(ClaimTypes.Name, existingUser!.Username),
                 new Claim(ClaimTypes.NameIdentifier, existingUser.Id.ToString()),
-            }),
+            }.Concat(existingUser.Roles.Select(r => new Claim(ClaimTypes.Role, r)))),
             //Expires = DateTime.UtcNow.AddMinutes(options.ExpirationMinutes),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature),
             Issuer = options.Issuer,

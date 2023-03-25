@@ -1,4 +1,5 @@
-﻿using HotChocolate.Data;
+﻿using HotChocolate.Authorization;
+using HotChocolate.Data;
 using MongoDB.Driver;
 
 namespace Askebakken.GraphQL.Schema.Queries;
@@ -6,6 +7,7 @@ namespace Askebakken.GraphQL.Schema.Queries;
 [ExtendObjectType("Query")]
 public class RecipeQuery
 {
+    [Authorize]
     [UsePaging]
     [UseProjection]
     [UseFiltering]
@@ -15,6 +17,7 @@ public class RecipeQuery
         return collection.AsExecutable();
     }
 
+    [Authorize]
     [UseFirstOrDefault]
     public IExecutable<Recipe> GetRecipeById(
         [Service] IMongoCollection<Recipe> collection,
