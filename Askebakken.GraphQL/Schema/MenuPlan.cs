@@ -3,13 +3,15 @@ using MongoDB.Driver;
 
 namespace Askebakken.GraphQL.Schema;
 
+[BsonIgnoreExtraElements]
 public class MenuPlan : SchemaBase
 {
+    
     public ICollection<Guid> RecipeIds { get; set; }
     [BsonIgnore]
     public ICollection<Recipe> Recipes { get; set; }
 
-    public DateOnly Date { get; set; }
+    public DateTime Date { get; set; }
 
     public ICollection<Guid> ParticipantIds { get; set; }
     [BsonIgnore]
