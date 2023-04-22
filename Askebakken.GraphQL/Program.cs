@@ -25,6 +25,8 @@ var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authOptions
 
 builder.Services.AddCors();
 
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(nameof(EmailOptions))).AddTransient<IEmailService, EmailService>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.IncludeErrorDetails = builder.Environment.IsDevelopment();

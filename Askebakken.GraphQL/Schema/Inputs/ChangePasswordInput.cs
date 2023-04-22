@@ -1,3 +1,3 @@
 namespace Askebakken.GraphQL.Schema.Inputs;
 
-public record ChangePasswordInput();
+public record ChangePasswordInput(string Username, string OldPassword, string NewPassword);

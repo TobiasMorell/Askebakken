@@ -1,6 +1,3 @@
 namespace Askebakken.GraphQL.Schema.Results;
 
-public class SuccessResult
-{
-    
-}
+public record SuccessResult(bool Success);

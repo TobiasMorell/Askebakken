@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Askebakken.GraphQL.Schema.Mutations;
+namespace Askebakken.GraphQL.Schema.Inputs;
 
 public class CreateResidentInput
 {
