@@ -8,12 +8,13 @@ import {
   SubscribeFunction,
 } from "relay-runtime";
 import { createClient } from "graphql-ws";
+import { getAuthToken } from "./state/token";
 
 const HTTP_ENDPOINT = `${window.location.protocol}//${window.location.host}/graphql`;
 const WEBSOCKET_ENDPOINT = HTTP_ENDPOINT.replace("http", "ws");
 
 const fetchFn: FetchFunction = async (request, variables) => {
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
 
   const resp = await fetch(HTTP_ENDPOINT, {
     method: "POST",

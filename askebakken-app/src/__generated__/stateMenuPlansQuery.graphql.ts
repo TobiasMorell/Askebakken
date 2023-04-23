@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<c9265a90503ab8bd027d63fef0fb82b0>>
+ * @generated SignedSource<<65a4dc72e6eaf6781d46e86dc648e765>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,11 +9,11 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type plannerPageMenuPlansQuery$variables = {
+export type stateMenuPlansQuery$variables = {
   endDate?: any | null;
   startDate?: any | null;
 };
-export type plannerPageMenuPlansQuery$data = {
+export type stateMenuPlansQuery$data = {
   readonly menuPlan: {
     readonly nodes: ReadonlyArray<{
       readonly date: any;
@@ -21,6 +21,7 @@ export type plannerPageMenuPlansQuery$data = {
       readonly participants: ReadonlyArray<{
         readonly firstName: string | null;
         readonly houseNumber: string;
+        readonly id: any;
         readonly lastName: string | null;
       }>;
       readonly recipes: ReadonlyArray<{
@@ -30,9 +31,9 @@ export type plannerPageMenuPlansQuery$data = {
     }> | null;
   } | null;
 };
-export type plannerPageMenuPlansQuery = {
-  response: plannerPageMenuPlansQuery$data;
-  variables: plannerPageMenuPlansQuery$variables;
+export type stateMenuPlansQuery = {
+  response: stateMenuPlansQuery$data;
+  variables: stateMenuPlansQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -152,6 +153,7 @@ v3 = [
             "name": "participants",
             "plural": true,
             "selections": [
+              (v2/*: any*/),
               {
                 "alias": null,
                 "args": null,
@@ -191,7 +193,7 @@ return {
     ],
     "kind": "Fragment",
     "metadata": null,
-    "name": "plannerPageMenuPlansQuery",
+    "name": "stateMenuPlansQuery",
     "selections": (v3/*: any*/),
     "type": "Query",
     "abstractKey": null
@@ -203,20 +205,20 @@ return {
       (v0/*: any*/)
     ],
     "kind": "Operation",
-    "name": "plannerPageMenuPlansQuery",
+    "name": "stateMenuPlansQuery",
     "selections": (v3/*: any*/)
   },
   "params": {
-    "cacheID": "179d2f115e9e44413af95992ca394825",
+    "cacheID": "2e916fe409edc410e3c21385346a2729",
     "id": null,
     "metadata": {},
-    "name": "plannerPageMenuPlansQuery",
+    "name": "stateMenuPlansQuery",
     "operationKind": "query",
-    "text": "query plannerPageMenuPlansQuery(\n  $startDate: DateTime\n  $endDate: DateTime\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      participants {\n        firstName\n        lastName\n        houseNumber\n      }\n    }\n  }\n}\n"
+    "text": "query stateMenuPlansQuery(\n  $startDate: DateTime\n  $endDate: DateTime\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n        firstName\n        lastName\n        houseNumber\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "e390efea412d2a4942d50b4fa030c096";
+(node as any).hash = "0c3307609a390b710af3c7eee4d9ac96";
 
 export default node;

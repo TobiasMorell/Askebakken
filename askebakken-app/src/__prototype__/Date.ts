@@ -2,6 +2,7 @@ interface Date {
   getWeek(): number;
   getDayOfYear(): number;
   toDateOnlyISOString(): string;
+  getDanishWeekday(): string;
 }
 
 // Returns the ISO week of the date.
@@ -36,4 +37,17 @@ Date.prototype.getDayOfYear = function () {
 
 Date.prototype.toDateOnlyISOString = function () {
   return this.toISOString().split("T")[0] + "Z";
+};
+
+const weekdays = [
+  "Søndag",
+  "Mandag",
+  "Tirsdag",
+  "Onsdag",
+  "Torsdag",
+  "Fredag",
+  "Lørdag",
+];
+Date.prototype.getDanishWeekday = function () {
+  return weekdays[this.getDay()];
 };

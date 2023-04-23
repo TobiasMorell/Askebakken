@@ -1,21 +1,20 @@
 import {
   Box,
   Button,
-  Checkbox,
   FormControl,
   FormLabel,
   Input,
   InputGroup,
-  InputProps,
   InputRightElement,
   Stack,
   useToast,
 } from "@chakra-ui/react";
-import { KeyboardEventHandler, useRef, useState } from "react";
+import { KeyboardEventHandler, useEffect, useRef, useState } from "react";
 import { LoginWrapper } from "./components/login-wrapper";
 import { Link, useNavigate } from "react-router-dom";
 import { graphql, useMutation } from "react-relay/hooks";
 import { loginPageAuthenticateMutation } from "../../__generated__/loginPageAuthenticateMutation.graphql";
+import { getAuthToken, setAuthToken } from "../../state/token";
 
 const loginMutation = graphql`
   mutation loginPageAuthenticateMutation(
@@ -44,6 +43,12 @@ export function LoginPage(props: {}) {
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (getAuthToken()) {
+      navigate("/", { replace: true });
+    }
+  }, []);
+
   function login() {
     setError(undefined);
     if (!email) {
@@ -64,7 +69,7 @@ export function LoginPage(props: {}) {
       },
       onCompleted: (data) => {
         const token = data.authenticate.token;
-        localStorage.setItem("token", token);
+        setAuthToken(token);
         navigate("/", { replace: true });
       },
       onError: (error) => {
@@ -78,7 +83,6 @@ export function LoginPage(props: {}) {
   }
 
   const loginOnEnter: KeyboardEventHandler = (e) => {
-    console.log(e);
     if (e.code === "Enter") {
       login();
     }

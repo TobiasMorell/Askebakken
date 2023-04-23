@@ -137,9 +137,9 @@ type Query {
 
 type Mutation {
   createRecipe(recipe: RecipeMutationTypeInput!): Recipe!
-  createMenuPlan(menuPlan: MenuPlanMutationTypeInput!): MenuPlan!
-  attend(menuPlanId: UUID!): MenuPlan!
-  unattend(menuPlanId: UUID!): MenuPlan!
+  createMenuPlan(createMenuPlan: CreateMenuPlanInput!): MenuPlan!
+  attend(input: MenuPlanAttendanceInput!): MenuPlan!
+  unattend(input: MenuPlanAttendanceInput!): MenuPlan!
   createResident(resident: CreateResidentInput!): Resident!
   authenticate(authenticateInput: AuthenticateInput!): AuthenticateResult!
   forgotPassword(forgotPasswordInput: ForgotPasswordInput!): SuccessResult!
@@ -585,7 +585,12 @@ input CreateResidentInput {
   houseNumber: String!
 }
 
-input MenuPlanMutationTypeInput {
+input MenuPlanAttendanceInput {
+  menuPlanId: UUID!
+  residentId: UUID
+}
+
+input CreateMenuPlanInput {
   recipes: [UUID!]!
   date: DateTime!
 }

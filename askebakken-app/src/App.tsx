@@ -12,6 +12,8 @@ import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import "./style.css";
 
 import "./__prototype__/Date";
+import { clearAuthToken, getAuthToken } from "./state/token";
+import { RecoilRoot } from "recoil";
 
 const router = createBrowserRouter([
   {
@@ -34,21 +36,23 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <ChakraProvider
-      toastOptions={{ defaultOptions: { position: "top-right" } }}
-    >
-      <Suspense
-        fallback={
-          <div className="page-loader">
-            <AbsoluteCenter>
-              <Spinner size="xl" />
-            </AbsoluteCenter>
-          </div>
-        }
+    <RecoilRoot key={getAuthToken()}>
+      <ChakraProvider
+        toastOptions={{ defaultOptions: { position: "top-right" } }}
       >
-        <RouterProvider router={router} />
-      </Suspense>
-    </ChakraProvider>
+        <Suspense
+          fallback={
+            <div className="page-loader">
+              <AbsoluteCenter>
+                <Spinner size="xl" />
+              </AbsoluteCenter>
+            </div>
+          }
+        >
+          <RouterProvider router={router} />
+        </Suspense>
+      </ChakraProvider>
+    </RecoilRoot>
   );
 }
 
@@ -61,9 +65,9 @@ function Fallback(props: FallbackProps) {
       | undefined = props.error.source?.errors;
 
     if (errors?.some((e) => e.extensions.code === "AUTH_NOT_AUTHORIZED")) {
-      localStorage.removeItem("token");
-      navigate("/login", { replace: true });
+      clearAuthToken();
       props.resetErrorBoundary();
+      navigate("/login", { replace: true });
     }
   }, [props?.error, navigate, props?.resetErrorBoundary]);
 

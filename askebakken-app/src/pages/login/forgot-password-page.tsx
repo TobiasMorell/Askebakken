@@ -59,7 +59,7 @@ export function ForgotPasswordPage() {
         });
       },
       onError: (error) => {
-        console.log(error);
+        console.error(error);
         toast({
           status: "error",
           title: "Dit kodeord kunne ikke nulstilles",

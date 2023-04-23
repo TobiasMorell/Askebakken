@@ -13,175 +13,20 @@ import {
   Input,
   Center,
   Stack,
-  useInterval,
 } from "@chakra-ui/react";
 import style from "./planner-page.module.css";
-import { ChevronRightIcon, ChevronLeftIcon, CheckIcon } from "@chakra-ui/icons";
-import { atom, selector, useRecoilValue, useSetRecoilState } from "recoil";
-import { graphQLSelector } from "recoil-relay";
-import { RelayEnvironment } from "../../RelayEnvironment";
-import { graphql } from "react-relay";
-import { plannerPageResidentsQuery$data } from "../../__generated__/plannerPageResidentsQuery.graphql";
-import { plannerPageMenuPlansQuery$data } from "../../__generated__/plannerPageMenuPlansQuery.graphql";
+import { CheckIcon } from "@chakra-ui/icons";
+import { useRecoilValue } from "recoil";
 import { useMemo } from "react";
+import { Recipes } from "./components/recipes";
+import { selectedDaysWithParticipantsState, residentsState } from "./state";
+import { Resident } from "./types";
+import { useAutomaticWeekChange } from "./hooks";
+import { ToggleAttendanceButton } from "../login/components/toggle-attendance-button";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
 const participantCategories = ["Voksen", "Voksen gæst", "Barn gæst"];
-const residentsState = graphQLSelector({
-  key: "residents",
-  environment: RelayEnvironment,
-  query: graphql`
-    query plannerPageResidentsQuery {
-      residents {
-        nodes {
-          id
-          firstName
-          lastName
-          houseNumber
-        }
-      }
-    }
-  `,
-  variables: {},
-  mapResponse: (r: plannerPageResidentsQuery$data) => r.residents?.nodes,
-});
-
-function getStartOfPlan() {
-  const now = new Date();
-  if (now.getDay() > 5) {
-    // Skip to next monday
-    now.setDate(now.getDate() + (8 - now.getDay()));
-  } else {
-    // Skip to previous monday
-    now.setDate(now.getDate() - (now.getDay() - 1));
-  }
-
-  return now;
-}
-
-function getEndOfPlan() {
-  const start = getStartOfPlan();
-  start.setDate(start.getDate() + 4);
-  return start;
-}
-
-const startDateState = atom({
-  key: "startDate",
-  default: getStartOfPlan(),
-});
-
-const endDateState = atom({
-  key: "endDate",
-  default: getEndOfPlan(),
-});
-
-const selectedDaysState = selector<Date[]>({
-  key: "selectedDays",
-  get: ({ get }) => {
-    const startDate = useRecoilValue(startDateState);
-    const endDate = useRecoilValue(endDateState);
-
-    const diff = Math.abs(endDate.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
-
-    return [...Array(diffDays + 1).keys()].map((i) => {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + i);
-      return d;
-    });
-  },
-});
-
-type Resident = Readonly<{
-  firstName: string | null;
-  lastName: string | null;
-}>;
-
-type Recipe = {
-  readonly id: string;
-  readonly name: string | null;
-};
-
-const menuPlanParticipantsState = graphQLSelector({
-  key: "menuPlanParticipants",
-  environment: RelayEnvironment,
-  query: graphql`
-    query plannerPageMenuPlansQuery($startDate: DateTime, $endDate: DateTime) {
-      menuPlan(
-        where: {
-          and: [{ date: { gte: $startDate } }, { date: { lte: $endDate } }]
-        }
-      ) {
-        nodes {
-          id
-          date
-          recipes {
-            id
-            name
-          }
-          participants {
-            firstName
-            lastName
-            houseNumber
-          }
-        }
-      }
-    }
-  `,
-  variables: ({ get }) => ({
-    startDate: get(startDateState).toDateOnlyISOString(),
-    endDate: get(endDateState).toDateOnlyISOString(),
-  }),
-  mapResponse: (r: plannerPageMenuPlansQuery$data) => {
-    return r.menuPlan?.nodes?.map((n) => ({ ...n, date: new Date(n.date) }));
-  },
-});
-
-const weekday = [
-  "Søndag",
-  "Mandag",
-  "Tirsdag",
-  "Onsdag",
-  "Torsdag",
-  "Fredag",
-  "Lørdag",
-];
-
-const selectedDaysWithParticipantsState = selector({
-  key: "selectedDaysWithParticipants",
-  get: ({ get }) => {
-    const selectedDays = get(selectedDaysState);
-    const participants = get(menuPlanParticipantsState);
-
-    return selectedDays.map((d) => ({
-      date: d,
-      dateName: weekday[d.getDay()],
-      plan: participants?.find(
-        (p) => p.date.getDayOfYear() === d.getDayOfYear()
-      ),
-    }));
-  },
-});
-
-function useAutomaticWeekChange() {
-  const setStartDate = useSetRecoilState(startDateState);
-  const setEndDate = useSetRecoilState(endDateState);
-
-  const everyHour = 1000 * 60 * 60;
-
-  useInterval(() => {
-    const now = new Date();
-    // Saturday morning after 6:00
-    if (now.getDay() === 6 && now.getHours() >= 6 && now.getHours() < 7) {
-      const weekStart = getStartOfPlan();
-      const endDate = getEndOfPlan();
-
-      setStartDate(weekStart);
-      setEndDate(endDate);
-    }
-  }, everyHour);
-}
 
 export function PlannerPage() {
   useAutomaticWeekChange();
@@ -216,7 +61,7 @@ export function PlannerPage() {
               <Td key={`name-${d.date.getDayOfYear()}`}>
                 <Stack padding={4}>
                   <Center>
-                    <Box fontWeight="bold">{weekday[d.date.getDay()]}</Box>
+                    <Box fontWeight="bold">{d.date.getDanishWeekday()}</Box>
                   </Center>
                   <Center>
                     <Box>{d.date.toLocaleDateString()}</Box>
@@ -266,18 +111,6 @@ export function PlannerPage() {
   );
 }
 
-function Recipes(props: { recipes: readonly Recipe[] }) {
-  return (
-    <Stack padding={4}>
-      {props.recipes?.map((r, idx) => (
-        <Center key={r.id}>
-          <Text>{r.name}</Text>
-        </Center>
-      ))}
-    </Stack>
-  );
-}
-
 function PlannerTableHouseEntry(props: {
   house: string;
   residents: Resident[];
@@ -291,6 +124,7 @@ function PlannerTableHouseEntry(props: {
         <ResidentRowEntries
           resident={props.residents[0]}
           entryClassName={style["no-bottom-border"]}
+          withGuests
         />
       </Tr>
       {props.residents.slice(1).map((r, idx) => (
@@ -310,6 +144,7 @@ function PlannerTableHouseEntry(props: {
 function ResidentRowEntries(props: {
   resident: Resident;
   entryClassName?: string;
+  withGuests?: boolean;
 }) {
   const dateSelection = useRecoilValue(selectedDaysWithParticipantsState);
 
@@ -319,7 +154,7 @@ function ResidentRowEntries(props: {
         <Box padding={4}>{props.resident.firstName}</Box>
       </Td>
 
-      {dateSelection.map((plan, idx) => (
+      {dateSelection.map((plan) => (
         <Td
           className={props.entryClassName}
           key={`entries-${plan.date.getDayOfYear()}`}
@@ -327,10 +162,17 @@ function ResidentRowEntries(props: {
           <PlannerTableEntry
             entries={[
               <Center>
-                <IconButton aria-label="Deltager" icon={<CheckIcon />} />
+                <ToggleAttendanceButton
+                  menuPlanId={plan.plan?.id}
+                  userId={props.resident.id}
+                />
               </Center>,
-              <Input type="number" placeholder="Antal" />,
-              <Input type="number" placeholder="Antal" />,
+              props.withGuests ? (
+                <Input type="number" placeholder="Antal" />
+              ) : null,
+              props.withGuests ? (
+                <Input type="number" placeholder="Antal" />
+              ) : null,
             ]}
           />
         </Td>
