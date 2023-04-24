@@ -1,10 +1,10 @@
 import {
+  Outlet,
   RouterProvider,
   createBrowserRouter,
   useNavigate,
 } from "react-router-dom";
-import { AbsoluteCenter, ChakraProvider, Spinner } from "@chakra-ui/react";
-import { ForgotPasswordPage } from "./pages/login/forgot-password-page";
+import { AbsoluteCenter, Box, ChakraProvider, Spinner } from "@chakra-ui/react";
 import { LoginPage } from "./pages/login/login-page";
 import { PlannerPage } from "./pages/planner/planner-page";
 import { Suspense, useEffect } from "react";
@@ -14,23 +14,39 @@ import "./style.css";
 import "./__prototype__/Date";
 import { clearAuthToken, getAuthToken } from "./state/token";
 import { RecoilRoot } from "recoil";
+import TopBar from "./components/top-bar";
+import React from "react";
+
+const NotFoundPage = React.lazy(
+  () => import("./pages/not-found/not-found-page")
+);
+const ForgotPasswordPage = React.lazy(
+  () => import("./pages/login/forgot-password-page")
+);
+const CreateMenuPlanPage = React.lazy(
+  () => import("./pages/create-menu-plan/create-menu-plan-page")
+);
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: (
-      <ErrorBoundary FallbackComponent={Fallback}>
-        <PlannerPage />
-      </ErrorBoundary>
-    ),
+    path: "",
+    Component: Layout,
+    children: [
+      { index: true, Component: PlannerPage },
+      { path: "add-plan", Component: CreateMenuPlanPage },
+    ],
   },
   {
     path: "login",
-    element: <LoginPage />,
+    Component: LoginPage,
   },
   {
     path: "forgot-password",
-    element: <ForgotPasswordPage />,
+    Component: ForgotPasswordPage,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 
@@ -49,10 +65,35 @@ function App() {
             </div>
           }
         >
-          <RouterProvider router={router} />
+          <Box>
+            <RouterProvider router={router} />
+          </Box>
         </Suspense>
       </ChakraProvider>
     </RecoilRoot>
+  );
+}
+
+function Layout() {
+  return (
+    <ErrorBoundary FallbackComponent={Fallback}>
+      <Box>
+        <TopBar
+          menuItems={[
+            {
+              text: "Tilmelding",
+              href: "/",
+            },
+            {
+              text: "Madplan",
+              href: "add-plan",
+            },
+          ]}
+        />
+
+        <Outlet />
+      </Box>
+    </ErrorBoundary>
   );
 }
 

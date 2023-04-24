@@ -20,7 +20,7 @@ const loginMutation = graphql`
   }
 `;
 
-export function ForgotPasswordPage() {
+export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [resetPasswordMutation, loading] = useMutation(loginMutation);

@@ -123,7 +123,9 @@ function PlannerTableHouseEntry(props: {
         </Td>
         <ResidentRowEntries
           resident={props.residents[0]}
-          entryClassName={style["no-bottom-border"]}
+          entryClassName={
+            props.residents.length > 1 ? style["no-bottom-border"] : undefined
+          }
           withGuests
         />
       </Tr>

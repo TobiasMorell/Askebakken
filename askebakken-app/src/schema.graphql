@@ -156,6 +156,7 @@ scalar UUID
 
 type Recipe {
   name: String!
+  category: String!
   id: UUID!
   createdAt: DateTime!
   modifiedAt: DateTime!
@@ -210,6 +211,7 @@ input RecipeFilterInput {
   and: [RecipeFilterInput!]
   or: [RecipeFilterInput!]
   name: StringOperationFilterInput
+  category: StringOperationFilterInput
   id: UuidOperationFilterInput
   createdAt: DateTimeOperationFilterInput
   modifiedAt: DateTimeOperationFilterInput
@@ -217,6 +219,7 @@ input RecipeFilterInput {
 
 input RecipeSortInput {
   name: SortEnumType
+  category: SortEnumType
   id: SortEnumType
   createdAt: SortEnumType
   modifiedAt: SortEnumType
