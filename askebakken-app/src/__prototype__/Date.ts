@@ -36,7 +36,10 @@ Date.prototype.getDayOfYear = function () {
 };
 
 Date.prototype.toDateOnlyISOString = function () {
-  return this.toISOString().split("T")[0] + "Z";
+  let ye = new Intl.DateTimeFormat("en", { year: "numeric" }).format(this);
+  let mo = new Intl.DateTimeFormat("en", { month: "2-digit" }).format(this);
+  let da = new Intl.DateTimeFormat("en", { day: "2-digit" }).format(this);
+  return `${ye}-${mo}-${da}` + "Z";
 };
 
 const weekdays = [

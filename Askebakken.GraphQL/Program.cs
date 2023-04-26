@@ -1,6 +1,7 @@
 using System.Text;
 using Askebakken.GraphQL.Extensions;
 using Askebakken.GraphQL.Options;
+using Askebakken.GraphQL.Repository.Recipe;
 using Askebakken.GraphQL.Services;
 using Askebakken.GraphQL.Services.PasswordHasher;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -46,6 +47,7 @@ builder.Services.AddAuthorization()
     .AddTransient<IUserService, UserService>();
 
 builder.Services
+    .AddSingleton<IRecipeRepository, MongoRecipeRepository>()
     .AddMongoDb(mongoOptions)
     .AddGraphQLServer().AddMongoDbPagingProviders().AddMongoQueryProviders()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()).AddAuthorization();

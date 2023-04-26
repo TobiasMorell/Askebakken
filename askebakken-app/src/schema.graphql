@@ -136,8 +136,9 @@ type Query {
 }
 
 type Mutation {
-  createRecipe(recipe: RecipeMutationTypeInput!): Recipe!
+  createRecipe(createRecipe: CreateRecipeInput!): Recipe!
   createMenuPlan(createMenuPlan: CreateMenuPlanInput!): MenuPlan!
+  createWeekPlan(createWeekPlan: CreateWeekPlanInput!): [MenuPlan!]!
   attend(input: MenuPlanAttendanceInput!): MenuPlan!
   unattend(input: MenuPlanAttendanceInput!): MenuPlan!
   createResident(resident: CreateResidentInput!): Resident!
@@ -593,12 +594,21 @@ input MenuPlanAttendanceInput {
   residentId: UUID
 }
 
+input CreateWeekPlanInput {
+  fromDate: DateTime!
+  monday: [CreateRecipeInput!]!
+  tuesday: [CreateRecipeInput!]!
+  wednesday: [CreateRecipeInput!]!
+  thursday: [CreateRecipeInput!]!
+  friday: [CreateRecipeInput!]!
+}
+
 input CreateMenuPlanInput {
   recipes: [UUID!]!
   date: DateTime!
 }
 
-input RecipeMutationTypeInput {
-  id: UUID
+input CreateRecipeInput {
   name: String!
+  category: String!
 }

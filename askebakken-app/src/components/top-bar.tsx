@@ -145,10 +145,6 @@ function UserAvatar() {
   const me = useRecoilValue(loggedInUser);
 
   return (
-    <Avatar
-      size={"md"}
-      name={`${me.valueMaybe()?.firstName} ${me.valueMaybe()?.lastName}`}
-      src={""}
-    />
+    <Avatar size={"md"} name={`${me.firstName} ${me.lastName}`} src={""} />
   );
 }

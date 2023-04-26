@@ -2,6 +2,7 @@ import { InfoOutlineIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
+  Center,
   HStack,
   Input,
   ListItem,
@@ -13,6 +14,8 @@ import {
   ModalHeader,
   ModalOverlay,
   Select,
+  Spacer,
+  Spinner,
   Stack,
   Table,
   TableContainer,
@@ -24,14 +27,35 @@ import {
   Tr,
   UnorderedList,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
-import { useMemo } from "react";
+import {
+  ChangeEventHandler,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { graphQLSelector } from "recoil-relay";
 import { RelayEnvironment } from "../../RelayEnvironment";
 import { createMenuPlanPageMenuPlansBetweenQuery$data } from "../../__generated__/createMenuPlanPageMenuPlansBetweenQuery.graphql";
-import { atom, selector, useRecoilState, useRecoilValueLoadable } from "recoil";
-import { graphql } from "react-relay";
+import {
+  atom,
+  selector,
+  useRecoilState,
+  useRecoilValue,
+  useRecoilValueLoadable,
+} from "recoil";
+import { graphql, useMutation } from "react-relay";
 import { toDictionary } from "../../utils/array-utils";
+import { Recipe } from "../planner/types";
+import {
+  CreateRecipeInput,
+  createMenuPlanPageMutation$variables,
+} from "../../__generated__/createMenuPlanPageMutation.graphql";
+
+type MenuPlanWithOptionalId = Omit<MenuPlan, "id"> & { id: string | undefined };
 
 const selectedWeek = atom({
   key: "selectedWeek",
@@ -52,6 +76,14 @@ const endDate = selector({
   key: "createMenuPlan_endDate",
   get: ({ get }) => getWeekDates(get(selectedWeek), get(selectedYear))[4],
 });
+
+const createWeekPlan = graphql`
+  mutation createMenuPlanPageMutation($input: CreateWeekPlanInput!) {
+    createWeekPlan(createWeekPlan: $input) {
+      id
+    }
+  }
+`;
 
 const menuPlansInWeek = graphQLSelector({
   key: "menuPlansInWeek",
@@ -77,10 +109,14 @@ const menuPlansInWeek = graphQLSelector({
     }
   `,
   environment: RelayEnvironment,
-  variables: ({ get }) => ({
-    fromDate: get(startDate),
-    toDate: get(endDate),
-  }),
+  variables: ({ get }) => {
+    const vars = {
+      fromDate: get(startDate).toDateOnlyISOString(),
+      toDate: get(endDate).toDateOnlyISOString(),
+    };
+
+    return vars;
+  },
   mapResponse: (r: createMenuPlanPageMenuPlansBetweenQuery$data): MenuPlan[] =>
     r.menuPlan?.nodes?.map((n) => ({ ...n, date: new Date(n.date) })) ?? [],
 });
@@ -95,14 +131,8 @@ type MenuPlan = Readonly<{
 }>;
 
 export default function CreateMenuPlanPage() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   const [week, setWeek] = useRecoilState(selectedWeek);
   const [year, setYear] = useRecoilState(selectedYear);
-
-  const weekDates = useMemo(() => getWeekDates(week, year), [week, year]);
-
-  const menuPlans = useRecoilValueLoadable(menuPlansInWeek);
 
   return (
     <Box padding={4}>
@@ -139,79 +169,202 @@ export default function CreateMenuPlanPage() {
           </Select>
         </HStack>
 
-        <TableContainer>
-          <Table>
-            <Tbody>
-              <Tr>
-                <Th></Th>
-                <Td>
-                  <HStack>
-                    <Text>Hovedret/fisk/kød/suppe</Text>
-                    <Tooltip
-                      placement="bottom"
-                      label="Vælg gerne 1-2 vegetar/suppedage, 1-2 fiskedage* og 2-3
+        <Suspense
+          fallback={
+            <Center>
+              <Spinner size="xl" />
+            </Center>
+          }
+        >
+          <WeekPlannerTable />
+        </Suspense>
+      </Stack>
+    </Box>
+  );
+}
+
+function WeekPlannerTable() {
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const week = useRecoilValue(selectedWeek);
+  const year = useRecoilValue(selectedYear);
+  const weekDates = useMemo(() => getWeekDates(week, year), [week, year]);
+
+  const menuPlans = useRecoilValue<MenuPlanWithOptionalId[]>(menuPlansInWeek);
+
+  const [editedMenuPlans, setEditedMenuPlans] = useState(menuPlans);
+  const addOrReplaceMenuPlan = useCallback(
+    (plan: MenuPlanWithOptionalId) => {
+      setEditedMenuPlans((prev) =>
+        prev
+          .filter((d) => d.date.getDayOfYear() != plan.date.getDayOfYear())
+          .concat(plan)
+      );
+    },
+    [setEditedMenuPlans]
+  );
+
+  const [commit, loading] = useMutation(createWeekPlan);
+
+  function executeCreateWeekPlanMutation() {
+    try {
+      const createWeekPlanVariables: createMenuPlanPageMutation$variables = {
+        input: {
+          fromDate: weekDates[0].toDateOnlyISOString(),
+          monday: createMenuPlanForDay(0),
+          tuesday: createMenuPlanForDay(1),
+          wednesday: createMenuPlanForDay(2),
+          thursday: createMenuPlanForDay(3),
+          friday: createMenuPlanForDay(4),
+        },
+      };
+
+      commit({
+        variables: createWeekPlanVariables,
+        onCompleted: () => {
+          toast({
+            title: "Ugeplan oprettet",
+            status: "success",
+          });
+        },
+        onError: (e) => {
+          console.error("Error creating week plan", e);
+          toast({
+            title: "Ugeplan kunne ikke oprettes",
+            description:
+              "Prøv igen senere og tag fat i Tobias hvis det ikke virker",
+            status: "error",
+          });
+        },
+      });
+
+      function createMenuPlanForDay(
+        weekDayNumber: number
+      ): readonly CreateRecipeInput[] {
+        const planForDay = editedMenuPlans.find(
+          (d) =>
+            d.date.getDayOfYear() == weekDates[weekDayNumber].getDayOfYear()
+        );
+        if (!planForDay || planForDay.recipes.length === 0) {
+          throw weekDates[weekDayNumber];
+        }
+
+        return planForDay.recipes;
+      }
+    } catch (e) {
+      if (e instanceof Date) {
+        toast({
+          title: "Udfyld venligst alle dage",
+          description: `Du mangler at udfylde ${e.toLocaleDateString()}`,
+          status: "error",
+        });
+      }
+    }
+  }
+
+  return (
+    <Box>
+      <TableContainer>
+        <Table>
+          <Tbody>
+            <Tr>
+              <Th></Th>
+              <Td>
+                <HStack>
+                  <Stack>
+                    <Text>Hovedret</Text>
+                    <Text>Fisk</Text>
+                    <Text>Kød</Text>
+                    <Text>Suppe</Text>
+                  </Stack>
+
+                  <Tooltip
+                    placement="bottom"
+                    label="Vælg gerne 1-2 vegetar/suppedage, 1-2 fiskedage* og 2-3
                   køddage. Vælg dansk produceret magert kød fra fjerkræ, okse,
                   lam eller svin med max 10 % fedt. *Tænk alternativt."
-                    >
-                      <InfoOutlineIcon />
-                    </Tooltip>
-                  </HStack>
-                </Td>
-                <Td>
-                  <HStack>
-                    <Text>Grove grøntsager/salat</Text>
-                    <Tooltip
-                      placement="bottom"
-                      label="Vælg gerne flere økologiske og lokale grove grønsager som kål, rodfrugter, løg, bønner og broccoli, der bages, koges, dampes eller steges i olie. Husk også krydderurterne."
-                    >
-                      <InfoOutlineIcon />
-                    </Tooltip>
-                  </HStack>
-                </Td>
-                <Td>
-                  <HStack>
-                    <Text>Tilbehør/kartofler/brød</Text>
-                    <Tooltip
-                      placement="bottom"
-                      label="Vælg gerne mere fuldkorn; fuldkornsris, fuldkornspasta og
+                  >
+                    <InfoOutlineIcon />
+                  </Tooltip>
+                </HStack>
+              </Td>
+              <Td>
+                <HStack>
+                  <Stack>
+                    <Text>Grove Grøntsager</Text>
+                    <Text>Salat</Text>
+                  </Stack>
+
+                  <Tooltip
+                    placement="bottom"
+                    label="Vælg gerne flere økologiske og lokale grove grønsager som kål, rodfrugter, løg, bønner og broccoli, der bages, koges, dampes eller steges i olie. Husk også krydderurterne."
+                  >
+                    <InfoOutlineIcon />
+                  </Tooltip>
+                </HStack>
+              </Td>
+              <Td>
+                <HStack>
+                  <Stack>
+                    <Text>Tilbehør</Text>
+                    <Text>Kartofler</Text>
+                    <Text>Brød</Text>
+                  </Stack>
+
+                  <Tooltip
+                    placement="bottom"
+                    label="Vælg gerne mere fuldkorn; fuldkornsris, fuldkornspasta og
                   nedsæt mængden af hvedemel og anvend gerne ½ del fuldkornsmel
                   (havre, rug og byg) i brødet."
-                    >
-                      <InfoOutlineIcon />
-                    </Tooltip>
-                  </HStack>
-                </Td>
-                <Td>
-                  <HStack>
-                    <Text>Sauce/Mælkeprodukter</Text>
-                    <Tooltip
-                      placement="bottom"
-                      label="Vælg gerne magre mælkeprodukter; fedtfattig yoghurt og
+                  >
+                    <InfoOutlineIcon />
+                  </Tooltip>
+                </HStack>
+              </Td>
+              <Td>
+                <HStack>
+                  <Stack>
+                    <Text>Sauce</Text>
+                    <Text>Mælkeprodukter</Text>
+                  </Stack>
+
+                  <Tooltip
+                    placement="bottom"
+                    label="Vælg gerne magre mælkeprodukter; fedtfattig yoghurt og
                   cremefraiche, mini- og skummemælk. Nedsæt mængden af fløde og
                   smør, og steg i raps- og olivenolie."
-                    >
-                      <InfoOutlineIcon />
-                    </Tooltip>
-                  </HStack>
-                </Td>
-              </Tr>
-              {weekDates.map((d) => (
-                <DayPlan
-                  key={d.getDayOfYear()}
-                  date={d}
-                  menuPlan={menuPlans
-                    .valueMaybe()
-                    ?.find((m) => m.date.getDayOfYear() === d.getDayOfYear())}
-                />
-              ))}
-            </Tbody>
-          </Table>
-        </TableContainer>
+                  >
+                    <InfoOutlineIcon />
+                  </Tooltip>
+                </HStack>
+              </Td>
+            </Tr>
+            {weekDates.map((d) => (
+              <DayPlan
+                key={d.getDayOfYear()}
+                date={d}
+                menuPlan={editedMenuPlans.find(
+                  (m) => m.date.getDayOfYear() === d.getDayOfYear()
+                )}
+                onChange={addOrReplaceMenuPlan}
+              />
+            ))}
+          </Tbody>
+        </Table>
+      </TableContainer>
 
-        <HStack justify="end">
-          <Button onClick={onOpen}>Se Askebakkens madprincipper</Button>
-        </HStack>
-      </Stack>
+      <HStack justify="end">
+        <Button
+          type="submit"
+          colorScheme="green"
+          isLoading={loading}
+          onClick={executeCreateWeekPlanMutation}
+        >
+          Gem madplanen
+        </Button>
+        <Button onClick={onOpen}>Se Askebakkens madprincipper</Button>
+      </HStack>
 
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
@@ -233,32 +386,69 @@ export default function CreateMenuPlanPage() {
   );
 }
 
-function DayPlan(props: { date: Date; menuPlan: MenuPlan | undefined }) {
+function DayPlan(props: {
+  date: Date;
+  menuPlan: MenuPlanWithOptionalId | undefined;
+  onChange: (plan: MenuPlanWithOptionalId) => void;
+}) {
   const recipeByCategory = useMemo(() => {
     return toDictionary(props.menuPlan?.recipes ?? [], (r) => r.category);
   }, [props.menuPlan?.recipes]);
 
+  const [recipes, setRecipes] = useState(recipeByCategory);
+
+  useEffect(() => {
+    props.onChange({
+      id: props.menuPlan?.id,
+      date: props.date,
+      recipes: Array.from(recipes.values()),
+    });
+  }, [recipes, props.date, props.menuPlan?.id, props.onChange]);
+
+  function addOrUpdateRecipe(
+    category: string
+  ): ChangeEventHandler<HTMLInputElement> {
+    return (e) => {
+      setRecipes((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(category, { name: e.target.value, category: category });
+        return newMap;
+      });
+    };
+  }
+
   return (
-    <Tr key={props.date.getDayOfYear()}>
-      <Td>
-        <Stack>
-          <Text>{props.date.getDanishWeekday()}</Text>
-          <Text>{props.date.toLocaleDateString()}</Text>
-        </Stack>
-      </Td>
-      <Td>
-        <Input value={recipeByCategory.get("main")?.name} />
-      </Td>
-      <Td>
-        <Input value={recipeByCategory.get("veggies")?.name} />
-      </Td>
-      <Td>
-        <Input value={recipeByCategory.get("side")?.name} />
-      </Td>
-      <Td>
-        <Input value={recipeByCategory.get("sauce")?.name} />
-      </Td>
-    </Tr>
+    <>
+      <Tr key={props.date.getDayOfYear()}>
+        <Td>
+          <Stack>
+            <Text>{props.date.getDanishWeekday()}</Text>
+            <Text>{props.date.toLocaleDateString()}</Text>
+          </Stack>
+        </Td>
+        {["main", "veggies", "side", "sauce"].map((cat) => (
+          <Td key={cat}>
+            <Input
+              value={recipes.get(cat)?.name ?? ""}
+              onChange={addOrUpdateRecipe(cat)}
+            />
+          </Td>
+        ))}
+      </Tr>
+
+      {props.date.getDay() === 5 && (
+        <Tr>
+          <Td>Dessert</Td>
+          <Td>
+            <Input
+              value={recipes.get("dessert")?.name ?? ""}
+              onChange={addOrUpdateRecipe("dessert")}
+            />
+          </Td>
+          <Td colSpan={3} />
+        </Tr>
+      )}
+    </>
   );
 }
 
