@@ -1,0 +1,129 @@
+import {
+  Outlet,
+  RouterProvider,
+  createBrowserRouter,
+  useNavigate,
+} from "react-router-dom";
+import { AbsoluteCenter, Box, ChakraProvider, Spinner } from "@chakra-ui/react";
+import { LoginPage } from "./pages/login/login-page";
+import { PlannerPage } from "./pages/planner/planner-page";
+import { Suspense, useEffect } from "react";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+import "./style.css";
+
+import "./__prototype__/Date";
+import { clearAuthToken, getAuthToken } from "./state/token";
+import { RecoilRoot } from "recoil";
+import TopBar from "./components/top-bar";
+import React from "react";
+
+const NotFoundPage = React.lazy(
+  () => import("./pages/not-found/not-found-page")
+);
+const ForgotPasswordPage = React.lazy(
+  () => import("./pages/login/forgot-password-page")
+);
+const CreateMenuPlanPage = React.lazy(
+  () => import("./pages/create-menu-plan/create-menu-plan-page")
+);
+
+const router = createBrowserRouter([
+  {
+    path: "",
+    Component: Layout,
+    children: [
+      { index: true, Component: PlannerPage },
+      { path: "add-plan", Component: CreateMenuPlanPage },
+    ],
+  },
+  {
+    path: "login",
+    Component: LoginPage,
+  },
+  {
+    path: "forgot-password",
+    Component: ForgotPasswordPage,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
+]);
+
+function App() {
+  return (
+    <RecoilRoot key={getAuthToken()}>
+      <ChakraProvider
+        toastOptions={{ defaultOptions: { position: "top-right" } }}
+      >
+        <Suspense
+          fallback={
+            <div className="page-loader">
+              <AbsoluteCenter>
+                <Spinner size="xl" />
+              </AbsoluteCenter>
+            </div>
+          }
+        >
+          <Box>
+            <RouterProvider router={router} />
+          </Box>
+        </Suspense>
+      </ChakraProvider>
+    </RecoilRoot>
+  );
+}
+
+function Layout() {
+  return (
+    <ErrorBoundary FallbackComponent={Fallback}>
+      <Box>
+        <TopBar
+          menuItems={[
+            {
+              text: "Tilmelding",
+              href: "/",
+            },
+            {
+              text: "Madplan",
+              href: "add-plan",
+            },
+          ]}
+        />
+
+        <Outlet />
+      </Box>
+    </ErrorBoundary>
+  );
+}
+
+function Fallback(props: FallbackProps) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const errors:
+      | [{ message: string; extensions: { code: string } }]
+      | undefined = props.error.source?.errors;
+
+    if (errors?.some((e) => e.extensions.code === "AUTH_NOT_AUTHORIZED")) {
+      clearAuthToken();
+      props.resetErrorBoundary();
+      navigate("/login", { replace: true });
+    }
+  }, [props?.error, navigate, props?.resetErrorBoundary]);
+
+  useEffect(() => {
+    if (window.location.hostname === "localhost") {
+      console.error(props.error);
+    }
+  }, [props.error]);
+
+  return (
+    <div role="alert">
+      <p>Something went wrong:</p>
+      <pre style={{ color: "red" }}>{props.error.message}</pre>
+    </div>
+  );
+}
+
+export default App;

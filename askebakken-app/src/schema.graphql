@@ -1,0 +1,614 @@
+type MenuPlan {
+  recipeIds: [UUID!]!
+  participantIds: [UUID!]!
+  recipes: [Recipe!]!
+  participants: [Resident!]!
+  date: DateTime!
+  id: UUID!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+}
+
+type Resident {
+  weekPlanIds: [UUID!]!
+  participatesInIds: [UUID!]!
+  weekPlans: [WeekPlan!]!
+  participatesIn: [MenuPlan!]!
+  username: String!
+  firstName: String
+  lastName: String
+  houseNumber: String!
+  id: UUID!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+}
+
+type WeekPlan {
+  menuPlanIds: [UUID!]!
+  authoredById: UUID!
+  menuPlans: [MenuPlan!]!
+  authoredBy: Resident!
+  year: Int!
+  weekNumber: Int!
+  id: UUID!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+}
+
+type Query {
+  menuPlan(
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+    where: MenuPlanFilterInput
+    order: [MenuPlanSortInput!]
+  ): MenuPlanConnection
+  menuPlanById(id: UUID!): MenuPlan
+  recipes(
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+    where: RecipeFilterInput
+    order: [RecipeSortInput!]
+  ): RecipesConnection
+  recipeById(id: UUID!): Recipe
+  me: Resident!
+  residents(
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+    where: ResidentFilterInput
+    order: [ResidentSortInput!]
+  ): ResidentsConnection
+  residentById(id: UUID!): Resident
+  weekPlan(
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+    where: WeekPlanFilterInput
+    order: [WeekPlanSortInput!]
+  ): WeekPlanConnection
+  weekPlanById(id: UUID!): WeekPlan
+}
+
+type Mutation {
+  createRecipe(createRecipe: CreateRecipeInput!): Recipe!
+  createMenuPlan(createMenuPlan: CreateMenuPlanInput!): MenuPlan!
+  createWeekPlan(createWeekPlan: CreateWeekPlanInput!): [MenuPlan!]!
+  attend(input: MenuPlanAttendanceInput!): MenuPlan!
+  unattend(input: MenuPlanAttendanceInput!): MenuPlan!
+  createResident(resident: CreateResidentInput!): Resident!
+  authenticate(authenticateInput: AuthenticateInput!): AuthenticateResult!
+  forgotPassword(forgotPasswordInput: ForgotPasswordInput!): SuccessResult!
+  changePassword(input: ChangePasswordInput!): SuccessResult!
+}
+
+enum ApplyPolicy {
+  BEFORE_RESOLVER
+  AFTER_RESOLVER
+  VALIDATION
+}
+
+scalar UUID
+
+type Recipe {
+  name: String!
+  category: String!
+  id: UUID!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+}
+
+"""
+The `DateTime` scalar represents an ISO-8601 compliant date time type.
+"""
+scalar DateTime
+
+input MenuPlanFilterInput {
+  and: [MenuPlanFilterInput!]
+  or: [MenuPlanFilterInput!]
+  recipeIds: ListUuidOperationFilterInput
+  recipes: ListFilterInputTypeOfRecipeFilterInput
+  date: DateTimeOperationFilterInput
+  participantIds: ListUuidOperationFilterInput
+  participants: ListFilterInputTypeOfResidentFilterInput
+  id: UuidOperationFilterInput
+  createdAt: DateTimeOperationFilterInput
+  modifiedAt: DateTimeOperationFilterInput
+}
+
+input MenuPlanSortInput {
+  date: SortEnumType
+  id: SortEnumType
+  createdAt: SortEnumType
+  modifiedAt: SortEnumType
+}
+
+"""
+A connection to a list of items.
+"""
+type MenuPlanConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  A list of edges.
+  """
+  edges: [MenuPlanEdge!]
+
+  """
+  A flattened list of the nodes.
+  """
+  nodes: [MenuPlan!]
+}
+
+input RecipeFilterInput {
+  and: [RecipeFilterInput!]
+  or: [RecipeFilterInput!]
+  name: StringOperationFilterInput
+  category: StringOperationFilterInput
+  id: UuidOperationFilterInput
+  createdAt: DateTimeOperationFilterInput
+  modifiedAt: DateTimeOperationFilterInput
+}
+
+input RecipeSortInput {
+  name: SortEnumType
+  category: SortEnumType
+  id: SortEnumType
+  createdAt: SortEnumType
+  modifiedAt: SortEnumType
+}
+
+"""
+A connection to a list of items.
+"""
+type RecipesConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  A list of edges.
+  """
+  edges: [RecipesEdge!]
+
+  """
+  A flattened list of the nodes.
+  """
+  nodes: [Recipe!]
+}
+
+input ResidentFilterInput {
+  and: [ResidentFilterInput!]
+  or: [ResidentFilterInput!]
+  username: StringOperationFilterInput
+  passwordHash: StringOperationFilterInput
+  firstName: StringOperationFilterInput
+  lastName: StringOperationFilterInput
+  houseNumber: StringOperationFilterInput
+  roles: ListStringOperationFilterInput
+  weekPlanIds: ListUuidOperationFilterInput
+  weekPlans: ListFilterInputTypeOfWeekPlanFilterInput
+  participatesInIds: ListUuidOperationFilterInput
+  participatesIn: ListFilterInputTypeOfMenuPlanFilterInput
+  id: UuidOperationFilterInput
+  createdAt: DateTimeOperationFilterInput
+  modifiedAt: DateTimeOperationFilterInput
+}
+
+input ResidentSortInput {
+  username: SortEnumType
+  passwordHash: SortEnumType
+  firstName: SortEnumType
+  lastName: SortEnumType
+  houseNumber: SortEnumType
+  id: SortEnumType
+  createdAt: SortEnumType
+  modifiedAt: SortEnumType
+}
+
+"""
+A connection to a list of items.
+"""
+type ResidentsConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  A list of edges.
+  """
+  edges: [ResidentsEdge!]
+
+  """
+  A flattened list of the nodes.
+  """
+  nodes: [Resident!]
+}
+
+input WeekPlanFilterInput {
+  and: [WeekPlanFilterInput!]
+  or: [WeekPlanFilterInput!]
+  year: IntOperationFilterInput
+  weekNumber: IntOperationFilterInput
+  menuPlanIds: ListUuidOperationFilterInput
+  menuPlans: ListFilterInputTypeOfMenuPlanFilterInput
+  authoredById: UuidOperationFilterInput
+  authoredBy: ResidentFilterInput
+  id: UuidOperationFilterInput
+  createdAt: DateTimeOperationFilterInput
+  modifiedAt: DateTimeOperationFilterInput
+}
+
+input WeekPlanSortInput {
+  year: SortEnumType
+  weekNumber: SortEnumType
+  authoredById: SortEnumType
+  authoredBy: ResidentSortInput
+  id: SortEnumType
+  createdAt: SortEnumType
+  modifiedAt: SortEnumType
+}
+
+"""
+A connection to a list of items.
+"""
+type WeekPlanConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  A list of edges.
+  """
+  edges: [WeekPlanEdge!]
+
+  """
+  A flattened list of the nodes.
+  """
+  nodes: [WeekPlan!]
+}
+
+type NotFoundError {
+  message: String!
+  ids: [UUID!]!
+}
+
+type MenuPlanAlreadyExistsErrors {
+  message: String!
+}
+
+type AlreadyParticipatingError {
+  message: String!
+  menuPlanId: UUID!
+}
+
+type NotParticipatingError {
+  message: String!
+  menuPlanId: UUID!
+}
+
+type UsernameAlreadyTakenError {
+  message: String!
+}
+
+type AuthenticationError {
+  message: String!
+}
+
+input ListUuidOperationFilterInput {
+  all: UuidOperationFilterInput
+  none: UuidOperationFilterInput
+  some: UuidOperationFilterInput
+  any: Boolean
+}
+
+input ListFilterInputTypeOfRecipeFilterInput {
+  all: RecipeFilterInput
+  none: RecipeFilterInput
+  some: RecipeFilterInput
+  any: Boolean
+}
+
+input DateTimeOperationFilterInput {
+  eq: DateTime
+  neq: DateTime
+  in: [DateTime]
+  nin: [DateTime]
+  gt: DateTime
+  ngt: DateTime
+  gte: DateTime
+  ngte: DateTime
+  lt: DateTime
+  nlt: DateTime
+  lte: DateTime
+  nlte: DateTime
+}
+
+input ListFilterInputTypeOfResidentFilterInput {
+  all: ResidentFilterInput
+  none: ResidentFilterInput
+  some: ResidentFilterInput
+  any: Boolean
+}
+
+input UuidOperationFilterInput {
+  eq: UUID
+  neq: UUID
+  in: [UUID]
+  nin: [UUID]
+  gt: UUID
+  ngt: UUID
+  gte: UUID
+  ngte: UUID
+  lt: UUID
+  nlt: UUID
+  lte: UUID
+  nlte: UUID
+}
+
+enum SortEnumType {
+  ASC
+  DESC
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  Indicates whether more edges exist following the set defined by the clients arguments.
+  """
+  hasNextPage: Boolean!
+
+  """
+  Indicates whether more edges exist prior the set defined by the clients arguments.
+  """
+  hasPreviousPage: Boolean!
+
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+"""
+An edge in a connection.
+"""
+type MenuPlanEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: MenuPlan!
+}
+
+input StringOperationFilterInput {
+  and: [StringOperationFilterInput!]
+  or: [StringOperationFilterInput!]
+  eq: String
+  neq: String
+  contains: String
+  ncontains: String
+  in: [String]
+  nin: [String]
+  startsWith: String
+  nstartsWith: String
+  endsWith: String
+  nendsWith: String
+}
+
+"""
+An edge in a connection.
+"""
+type RecipesEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: Recipe!
+}
+
+input ListStringOperationFilterInput {
+  all: StringOperationFilterInput
+  none: StringOperationFilterInput
+  some: StringOperationFilterInput
+  any: Boolean
+}
+
+input ListFilterInputTypeOfWeekPlanFilterInput {
+  all: WeekPlanFilterInput
+  none: WeekPlanFilterInput
+  some: WeekPlanFilterInput
+  any: Boolean
+}
+
+input ListFilterInputTypeOfMenuPlanFilterInput {
+  all: MenuPlanFilterInput
+  none: MenuPlanFilterInput
+  some: MenuPlanFilterInput
+  any: Boolean
+}
+
+"""
+An edge in a connection.
+"""
+type ResidentsEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: Resident!
+}
+
+input IntOperationFilterInput {
+  eq: Int
+  neq: Int
+  in: [Int]
+  nin: [Int]
+  gt: Int
+  ngt: Int
+  gte: Int
+  ngte: Int
+  lt: Int
+  nlt: Int
+  lte: Int
+  nlte: Int
+}
+
+"""
+An edge in a connection.
+"""
+type WeekPlanEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: WeekPlan!
+}
+
+input ChangePasswordInput {
+  username: String!
+  oldPassword: String!
+  newPassword: String!
+}
+
+input ForgotPasswordInput {
+  username: String!
+}
+
+type SuccessResult {
+  success: Boolean!
+}
+
+input AuthenticateInput {
+  username: String!
+  password: String!
+}
+
+type AuthenticateResult {
+  token: String!
+}
+
+input CreateResidentInput {
+  username: String!
+  password: String!
+  firstName: String
+  lastName: String
+  houseNumber: String!
+}
+
+input MenuPlanAttendanceInput {
+  menuPlanId: UUID!
+  residentId: UUID
+}
+
+input CreateWeekPlanInput {
+  fromDate: DateTime!
+  monday: [CreateRecipeInput!]!
+  tuesday: [CreateRecipeInput!]!
+  wednesday: [CreateRecipeInput!]!
+  thursday: [CreateRecipeInput!]!
+  friday: [CreateRecipeInput!]!
+}
+
+input CreateMenuPlanInput {
+  recipes: [UUID!]!
+  date: DateTime!
+}
+
+input CreateRecipeInput {
+  name: String!
+  category: String!
+}

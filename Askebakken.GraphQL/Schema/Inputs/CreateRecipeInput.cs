@@ -1,6 +1,6 @@
-﻿namespace Askebakken.GraphQL.Schema;
+namespace Askebakken.GraphQL.Schema.Inputs;
 
-public class Recipe : SchemaBase
+public class CreateRecipeInput
 {
     public string Name { get; set; }
     public string Category { get; set; }

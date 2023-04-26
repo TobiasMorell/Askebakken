@@ -1,0 +1,16 @@
+.plannerTable th,
+.plannerTable td {
+  border-collapse: collapse;
+  border: 2px solid black;
+  box-sizing: border-box;
+  height: 60px;
+  padding: 0;
+}
+
+.plannerTable td.no-bottom-border {
+  border-bottom: none;
+}
+
+.plannerTable td.no-top-border {
+  border-top: none;
+}
