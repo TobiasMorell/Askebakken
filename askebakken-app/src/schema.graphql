@@ -1,3 +1,9 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscriptions
+}
+
 type MenuPlan {
   recipeIds: [UUID!]!
   participantIds: [UUID!]!
@@ -151,6 +157,10 @@ enum ApplyPolicy {
   BEFORE_RESOLVER
   AFTER_RESOLVER
   VALIDATION
+}
+
+type Subscriptions {
+  menuPlanAttendanceChanged: AttendanceChangedEventMessage!
 }
 
 scalar UUID
@@ -556,6 +566,12 @@ type WeekPlanEdge {
   The item at the end of the edge.
   """
   node: WeekPlan!
+}
+
+type AttendanceChangedEventMessage {
+  menuPlanId: UUID!
+  residentId: UUID!
+  attending: Boolean!
 }
 
 input ChangePasswordInput {

@@ -49,7 +49,7 @@ builder.Services.AddAuthorization()
 builder.Services
     .AddSingleton<IRecipeRepository, MongoRecipeRepository>()
     .AddMongoDb(mongoOptions)
-    .AddGraphQLServer().AddMongoDbPagingProviders().AddMongoQueryProviders()
+    .AddGraphQLServer().AddMongoDbPagingProviders().AddMongoQueryProviders().AddInMemorySubscriptions()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()).AddAuthorization();
 
 var app = builder.Build();
@@ -59,6 +59,7 @@ app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyHeader());
 
+app.UseWebSockets();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapGraphQL();
