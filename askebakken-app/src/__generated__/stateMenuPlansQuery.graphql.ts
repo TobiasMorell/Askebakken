@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<65a4dc72e6eaf6781d46e86dc648e765>>
+ * @generated SignedSource<<e1f62fcb3c10e3ea1a3a51e4b7e13a7d>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -19,10 +19,7 @@ export type stateMenuPlansQuery$data = {
       readonly date: any;
       readonly id: any;
       readonly participants: ReadonlyArray<{
-        readonly firstName: string | null;
-        readonly houseNumber: string;
         readonly id: any;
-        readonly lastName: string | null;
       }>;
       readonly recipes: ReadonlyArray<{
         readonly id: any;
@@ -153,28 +150,7 @@ v3 = [
             "name": "participants",
             "plural": true,
             "selections": [
-              (v2/*: any*/),
-              {
-                "alias": null,
-                "args": null,
-                "kind": "ScalarField",
-                "name": "firstName",
-                "storageKey": null
-              },
-              {
-                "alias": null,
-                "args": null,
-                "kind": "ScalarField",
-                "name": "lastName",
-                "storageKey": null
-              },
-              {
-                "alias": null,
-                "args": null,
-                "kind": "ScalarField",
-                "name": "houseNumber",
-                "storageKey": null
-              }
+              (v2/*: any*/)
             ],
             "storageKey": null
           }
@@ -209,16 +185,16 @@ return {
     "selections": (v3/*: any*/)
   },
   "params": {
-    "cacheID": "2e916fe409edc410e3c21385346a2729",
+    "cacheID": "15c65060a76ea9f4b5c3d8c79229c917",
     "id": null,
     "metadata": {},
     "name": "stateMenuPlansQuery",
     "operationKind": "query",
-    "text": "query stateMenuPlansQuery(\n  $startDate: DateTime\n  $endDate: DateTime\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n        firstName\n        lastName\n        houseNumber\n      }\n    }\n  }\n}\n"
+    "text": "query stateMenuPlansQuery(\n  $startDate: DateTime\n  $endDate: DateTime\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "0c3307609a390b710af3c7eee4d9ac96";
+(node as any).hash = "3190fcdc9ea5a6b2c857656948fb4c6f";
 
 export default node;

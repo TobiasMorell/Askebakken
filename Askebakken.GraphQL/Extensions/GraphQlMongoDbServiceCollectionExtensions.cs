@@ -3,6 +3,7 @@ using Askebakken.GraphQL.Options;
 using Askebakken.GraphQL.Schema;
 using Askebakken.GraphQL.Schema.Mutations;
 using Askebakken.GraphQL.Schema.Queries;
+using Askebakken.GraphQL.Schema.Subscriptions;
 using HotChocolate.Execution.Configuration;
 using MongoDB.Driver;
 
@@ -43,6 +44,7 @@ public static class GraphQlMongoDbServiceCollectionExtensions
             .AddType<WeekPlanQuery>().AddMongoDbFiltering().AddMongoDbSorting().AddMongoDbProjections();
 
         services.AddMutationType(m => m.Name("Mutation")).AddType<RecipeMutations>().AddType<MenuPlanMutations>().AddType<ResidentMutations>();
+        services.AddSubscriptionType<Subscriptions>();
         
         return services;
     }

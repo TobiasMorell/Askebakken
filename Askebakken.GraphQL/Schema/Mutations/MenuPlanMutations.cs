@@ -2,8 +2,10 @@ using System.Security.Claims;
 using Askebakken.GraphQL.Repository.Recipe;
 using Askebakken.GraphQL.Schema.Errors;
 using Askebakken.GraphQL.Schema.Inputs;
+using Askebakken.GraphQL.Schema.Subscriptions;
 using Askebakken.GraphQL.Services;
 using HotChocolate.Authorization;
+using HotChocolate.Subscriptions;
 using MongoDB.Driver;
 
 namespace Askebakken.GraphQL.Schema.Mutations;
@@ -91,11 +93,11 @@ public class MenuPlanMutations
     }
 
     [Error<NotFoundError>]
-    [Error<AlreadyParticipatingError>]
     [Authorize]
     public async Task<MenuPlan> Attend([Service] IMongoCollection<MenuPlan> collection,
         [Service] IMongoCollection<Resident> residentCollection,
         [Service] IUserService userService,
+        [Service] ITopicEventSender eventSender,
         MenuPlanAttendanceInput input,
         CancellationToken cancellationToken = default)
     {
@@ -112,7 +114,7 @@ public class MenuPlanMutations
         var participantIds = menuPlan.ParticipantIds.ToHashSet();
         if (participantIds.Contains(residentToAttend))
         {
-            throw new AlreadyParticipatingError(menuPlanId);
+            return menuPlan;
         }
 
         participantIds.Add(residentToAttend);
@@ -129,15 +131,18 @@ public class MenuPlanMutations
 
         await Task.WhenAll(replaceMenuPlan, updateResident);
 
+        await eventSender.SendAsync(AttendanceChangedEventMessage.Topic,
+            new AttendanceChangedEventMessage(menuPlanId, residentToAttend, true), cancellationToken);
+
         return menuPlan;
     }
 
     [Error<NotFoundError>]
-    [Error<NotParticipatingError>]
     [Authorize]
     public async Task<MenuPlan> Unattend([Service] IMongoCollection<MenuPlan> collection,
         [Service] IMongoCollection<Resident> residentCollection,
         [Service] IUserService userService,
+        [Service] ITopicEventSender eventSender,
         MenuPlanAttendanceInput input,
         CancellationToken cancellationToken = default)
     {
@@ -154,7 +159,7 @@ public class MenuPlanMutations
         var participantIds = menuPlan.ParticipantIds.ToHashSet();
         if (!participantIds.Contains(residentToAttend))
         {
-            throw new NotParticipatingError(menuPlanId);
+            return menuPlan;
         }
 
         participantIds.Remove(residentToAttend);
@@ -171,6 +176,9 @@ public class MenuPlanMutations
             cancellationToken: cancellationToken);
 
         await Task.WhenAll(replaceMenuPlan, updateResident);
+        
+        await eventSender.SendAsync(AttendanceChangedEventMessage.Topic,
+            new AttendanceChangedEventMessage(menuPlanId, residentToAttend, false), cancellationToken);
 
         return menuPlan;
     }

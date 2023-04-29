@@ -9,13 +9,11 @@ import {
   Box,
   Flex,
   Text,
-  IconButton,
   Input,
   Center,
   Stack,
 } from "@chakra-ui/react";
 import style from "./planner-page.module.css";
-import { CheckIcon } from "@chakra-ui/icons";
 import { useRecoilValue } from "recoil";
 import { useMemo } from "react";
 import { Recipes } from "./components/recipes";
@@ -23,6 +21,7 @@ import { selectedDaysWithParticipantsState, residentsState } from "./state";
 import { Resident } from "./types";
 import { useAutomaticWeekChange } from "./hooks";
 import { ToggleAttendanceButton } from "../login/components/toggle-attendance-button";
+import { RealTimeParticipantStatus } from "./components/RealTimeParticipantStatus";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
@@ -30,7 +29,7 @@ const participantCategories = ["Voksen", "Voksen gæst", "Barn gæst"];
 
 export function PlannerPage() {
   useAutomaticWeekChange();
-  const dateSelection = useRecoilValue(selectedDaysWithParticipantsState);
+  const menuPlans = useRecoilValue(selectedDaysWithParticipantsState);
 
   const residents = useRecoilValue(residentsState);
   const houses = useMemo(
@@ -49,65 +48,68 @@ export function PlannerPage() {
   }, [residents]);
 
   return (
-    <TableContainer margin={4}>
-      <Table className={style.plannerTable} size="sm">
-        <Thead>
-          <Tr>
-            <Th colSpan={2}>
-              <Center>Uge</Center>
-            </Th>
-
-            {dateSelection.map((d) => (
-              <Td key={`name-${d.date.getDayOfYear()}`}>
-                <Stack padding={4}>
-                  <Center>
-                    <Box fontWeight="bold">{d.date.getDanishWeekday()}</Box>
-                  </Center>
-                  <Center>
-                    <Box>{d.date.toLocaleDateString()}</Box>
-                  </Center>
-                </Stack>
-              </Td>
-            ))}
-          </Tr>
-          <Tr>
-            <Th colSpan={2}>
-              <Center>Menu</Center>
-            </Th>
-            {dateSelection.map((d) => (
-              <Td key={`menu-${d.date.getDayOfYear()}`}>
-                <Center>
-                  {d.plan?.recipes ? (
-                    <Recipes recipes={d.plan.recipes} />
-                  ) : (
-                    <Text fontStyle="italic">Intet planlagt</Text>
-                  )}
-                </Center>
-              </Td>
-            ))}
-          </Tr>
-          <Tr>
-            <Th colSpan={2}>
-              <Center>{dateSelection[0].date.getWeek()}</Center>
-            </Th>
-            {dateSelection.map((d) => (
-              <Th key={`categories-${d.date.getDayOfYear()}`}>
-                <PlannerTableEntry entries={participantCategories} />
+    <>
+      <RealTimeParticipantStatus />
+      <TableContainer margin={4}>
+        <Table className={style.plannerTable} size="sm">
+          <Thead>
+            <Tr>
+              <Th colSpan={2}>
+                <Center>Uge</Center>
               </Th>
+
+              {menuPlans.map((d) => (
+                <Td key={`name-${d.date.getDayOfYear()}`}>
+                  <Stack padding={4}>
+                    <Center>
+                      <Box fontWeight="bold">{d.date.getDanishWeekday()}</Box>
+                    </Center>
+                    <Center>
+                      <Box>{d.date.toLocaleDateString()}</Box>
+                    </Center>
+                  </Stack>
+                </Td>
+              ))}
+            </Tr>
+            <Tr>
+              <Th colSpan={2}>
+                <Center>Menu</Center>
+              </Th>
+              {menuPlans.map((d) => (
+                <Td key={`menu-${d.date.getDayOfYear()}`}>
+                  <Center>
+                    {d.plan?.recipes ? (
+                      <Recipes recipes={d.plan.recipes} />
+                    ) : (
+                      <Text fontStyle="italic">Intet planlagt</Text>
+                    )}
+                  </Center>
+                </Td>
+              ))}
+            </Tr>
+            <Tr>
+              <Th colSpan={2}>
+                <Center>{menuPlans[0].date.getWeek()}</Center>
+              </Th>
+              {menuPlans.map((d) => (
+                <Th key={`categories-${d.date.getDayOfYear()}`}>
+                  <PlannerTableEntry entries={participantCategories} />
+                </Th>
+              ))}
+            </Tr>
+          </Thead>
+          <Tbody>
+            {houses.map((house) => (
+              <PlannerTableHouseEntry
+                key={house}
+                house={house}
+                residents={residentByHouse[house]}
+              />
             ))}
-          </Tr>
-        </Thead>
-        <Tbody>
-          {houses.map((house) => (
-            <PlannerTableHouseEntry
-              key={house}
-              house={house}
-              residents={residentByHouse[house]}
-            />
-          ))}
-        </Tbody>
-      </Table>
-    </TableContainer>
+          </Tbody>
+        </Table>
+      </TableContainer>
+    </>
   );
 }
 
@@ -148,7 +150,7 @@ function ResidentRowEntries(props: {
   entryClassName?: string;
   withGuests?: boolean;
 }) {
-  const dateSelection = useRecoilValue(selectedDaysWithParticipantsState);
+  const menuPlans = useRecoilValue(selectedDaysWithParticipantsState);
 
   return (
     <>
@@ -156,7 +158,7 @@ function ResidentRowEntries(props: {
         <Box padding={4}>{props.resident.firstName}</Box>
       </Td>
 
-      {dateSelection.map((plan) => (
+      {menuPlans.map((plan) => (
         <Td
           className={props.entryClassName}
           key={`entries-${plan.date.getDayOfYear()}`}
@@ -165,8 +167,14 @@ function ResidentRowEntries(props: {
             entries={[
               <Center>
                 <ToggleAttendanceButton
-                  menuPlanId={plan.plan?.id}
+                  participantIds={
+                    plan.plan?.participants
+                      .map((p) => p?.id)
+                      .filter((p) => !!p)
+                      .map((p) => p!) ?? []
+                  }
                   userId={props.resident.id}
+                  menuPlanId={plan.plan?.id}
                 />
               </Center>,
               props.withGuests ? (

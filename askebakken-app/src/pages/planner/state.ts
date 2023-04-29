@@ -1,4 +1,4 @@
-import { atom, selector, useRecoilValue } from "recoil";
+import { atom, atomFamily, noWait, selector, useRecoilValue } from "recoil";
 import { graphQLSelector, graphQLSelectorFamily } from "recoil-relay";
 import { graphql } from "relay-runtime";
 import { RelayEnvironment } from "../../RelayEnvironment";
@@ -6,6 +6,9 @@ import { getStartOfPlan, getEndOfPlan } from "./helpers";
 import { stateResidentsQuery$data } from "../../__generated__/stateResidentsQuery.graphql";
 import { stateMenuPlansQuery$data } from "../../__generated__/stateMenuPlansQuery.graphql";
 import { stateUserAttendanceQuery$data } from "../../__generated__/stateUserAttendanceQuery.graphql";
+import { stateMenuPlanAttendanceChangedSubscription$data } from "../../__generated__/stateMenuPlanAttendanceChangedSubscription.graphql";
+import { groupBy } from "../../utils/array-utils";
+import { AttendanceEvent } from "./types";
 
 export const startDateState = atom({
   key: "startDate",
@@ -72,36 +75,98 @@ export const menuPlanParticipantsState = graphQLSelector({
           }
           participants {
             id
-            firstName
-            lastName
-            houseNumber
           }
         }
       }
     }
   `,
-  variables: ({ get }) => ({
-    startDate: get(startDateState).toDateOnlyISOString(),
-    endDate: get(endDateState).toDateOnlyISOString(),
-  }),
+  variables: ({ get }) => {
+    const startDate = get(startDateState).toDateOnlyISOString();
+    const endDate = get(endDateState).toDateOnlyISOString();
+    return {
+      startDate,
+      endDate,
+    };
+  },
   mapResponse: (r: stateMenuPlansQuery$data) => {
     return r.menuPlan?.nodes?.map((n) => ({ ...n, date: new Date(n.date) }));
   },
+});
+
+export const menuPlanAttendanceEvents = graphQLSelector({
+  key: "menuPlanAttendanceEvents",
+  environment: RelayEnvironment,
+  query: graphql`
+    subscription stateMenuPlanAttendanceChangedSubscription {
+      menuPlanAttendanceChanged {
+        menuPlanId
+        residentId
+        attending
+      }
+    }
+  `,
+  variables: () => ({}),
+  mapResponse: (
+    r: stateMenuPlanAttendanceChangedSubscription$data
+  ): AttendanceEvent => r.menuPlanAttendanceChanged,
+});
+
+export const menuPlanAttendanceEventsState = atom<AttendanceEvent[]>({
+  key: "menuPlanAttendanceEventsState",
+  default: [],
 });
 
 export const selectedDaysWithParticipantsState = selector({
   key: "selectedDaysWithParticipants",
   get: ({ get }) => {
     const selectedDays = get(selectedDaysState);
-    const participants = get(menuPlanParticipantsState);
+    const menuPlans = get(menuPlanParticipantsState);
+    const attendanceEvents = get(menuPlanAttendanceEventsState);
 
-    return selectedDays.map((d) => ({
-      date: d,
-      dateName: d.getDanishWeekday(),
-      plan: participants?.find(
+    const attendanceByMenuPlanId = groupBy(
+      attendanceEvents,
+      (e) => e.menuPlanId
+    );
+
+    return selectedDays.map((d) => {
+      const plan = menuPlans?.find(
         (p) => p.date.getDayOfYear() === d.getDayOfYear()
-      ),
-    }));
+      );
+      const attendanceEventsForPlan =
+        attendanceByMenuPlanId.get(plan?.id) ?? [];
+
+      const allParticipants = [
+        ...new Set(
+          attendanceEventsForPlan
+            .map((e) => e.residentId)
+            .concat(plan?.participants?.map((p) => p.id) ?? [])
+        ),
+      ];
+
+      return {
+        date: d,
+        dateName: d.getDanishWeekday(),
+        plan: plan
+          ? {
+              ...plan,
+              participants: allParticipants
+                .map((id) => {
+                  const event = attendanceEventsForPlan.find(
+                    (e) => e.residentId === id
+                  );
+                  if (event != null && !event.attending) {
+                    return null;
+                  }
+
+                  return {
+                    id,
+                  };
+                })
+                .filter((p) => p != null),
+            }
+          : null,
+      };
+    });
   },
 });
 

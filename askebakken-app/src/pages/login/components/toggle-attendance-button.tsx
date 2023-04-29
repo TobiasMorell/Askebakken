@@ -1,13 +1,7 @@
 import { CheckIcon } from "@chakra-ui/icons";
 import { IconButton, useToast } from "@chakra-ui/react";
 import { useMutation } from "react-relay/hooks";
-import {
-  useRecoilRefresher_UNSTABLE,
-  useRecoilStateLoadable,
-  useRecoilValue,
-  useRecoilValueLoadable,
-  useResetRecoilState,
-} from "recoil";
+import { useRecoilStateLoadable } from "recoil";
 import { graphql } from "relay-runtime";
 import { userAttendanceState } from "../../planner/state";
 
@@ -44,6 +38,7 @@ const unattendMutation = graphql`
 export function ToggleAttendanceButton(props: {
   userId: string;
   menuPlanId: string | undefined;
+  participantIds: string[];
 }) {
   const toast = useToast();
 
@@ -57,9 +52,7 @@ export function ToggleAttendanceButton(props: {
   const loading =
     attendLoading || unattendLoading || userAttendance.state === "loading";
 
-  const attendsPlan =
-    props.menuPlanId != null &&
-    userAttendance.valueMaybe()?.participatesInIds.includes(props.menuPlanId);
+  const attendsPlan = props.participantIds.includes(props.userId);
 
   function toggleAttendance() {
     if (props.menuPlanId == null) {
