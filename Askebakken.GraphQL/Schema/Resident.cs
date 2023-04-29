@@ -9,6 +9,8 @@ public class Resident : SchemaBase
     public string PasswordHash { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public DateTime BirthDate { get; set; }
+    public bool Child => BirthDate > DateTime.Now.Date.AddYears(-18);
     public string HouseNumber { get; set; }
 
     public IList<string> Roles { get; set; }

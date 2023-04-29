@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<972ef3039113e171cfd61632497e01fd>>
+ * @generated SignedSource<<8f45bd1506bb5d14d818919f4fb2ee9f>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -13,6 +13,7 @@ export type stateResidentsQuery$variables = {};
 export type stateResidentsQuery$data = {
   readonly residents: {
     readonly nodes: ReadonlyArray<{
+      readonly child: boolean;
       readonly firstName: string | null;
       readonly houseNumber: string;
       readonly id: any;
@@ -70,6 +71,13 @@ var v0 = [
             "kind": "ScalarField",
             "name": "houseNumber",
             "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "kind": "ScalarField",
+            "name": "child",
+            "storageKey": null
           }
         ],
         "storageKey": null
@@ -96,16 +104,16 @@ return {
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "1e33a84a2b895dd0e9660ac32c349d60",
+    "cacheID": "2338ed89d0e75151141f545a927f4ee6",
     "id": null,
     "metadata": {},
     "name": "stateResidentsQuery",
     "operationKind": "query",
-    "text": "query stateResidentsQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n    }\n  }\n}\n"
+    "text": "query stateResidentsQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "87d0412e3fd692f2db85fd64c19434de";
+(node as any).hash = "a820b200d7dfba70e9b0278bb963b4fb";
 
 export default node;

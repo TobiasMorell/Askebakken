@@ -9,7 +9,9 @@ type MenuPlan {
   participantIds: [UUID!]!
   recipes: [Recipe!]!
   participants: [Resident!]!
+  chefs: [Resident!]!
   date: DateTime!
+  chefIds: [UUID!]
   id: UUID!
   createdAt: DateTime!
   modifiedAt: DateTime!
@@ -23,6 +25,8 @@ type Resident {
   username: String!
   firstName: String
   lastName: String
+  birthDate: DateTime!
+  child: Boolean!
   houseNumber: String!
   id: UUID!
   createdAt: DateTime!
@@ -186,6 +190,8 @@ input MenuPlanFilterInput {
   date: DateTimeOperationFilterInput
   participantIds: ListUuidOperationFilterInput
   participants: ListFilterInputTypeOfResidentFilterInput
+  chefIds: ListUuidOperationFilterInput
+  chefs: ListFilterInputTypeOfResidentFilterInput
   id: UuidOperationFilterInput
   createdAt: DateTimeOperationFilterInput
   modifiedAt: DateTimeOperationFilterInput
@@ -263,6 +269,8 @@ input ResidentFilterInput {
   passwordHash: StringOperationFilterInput
   firstName: StringOperationFilterInput
   lastName: StringOperationFilterInput
+  birthDate: DateTimeOperationFilterInput
+  child: BooleanOperationFilterInput
   houseNumber: StringOperationFilterInput
   roles: ListStringOperationFilterInput
   weekPlanIds: ListUuidOperationFilterInput
@@ -279,6 +287,8 @@ input ResidentSortInput {
   passwordHash: SortEnumType
   firstName: SortEnumType
   lastName: SortEnumType
+  birthDate: SortEnumType
+  child: SortEnumType
   houseNumber: SortEnumType
   id: SortEnumType
   createdAt: SortEnumType
@@ -356,16 +366,6 @@ type NotFoundError {
 
 type MenuPlanAlreadyExistsErrors {
   message: String!
-}
-
-type AlreadyParticipatingError {
-  message: String!
-  menuPlanId: UUID!
-}
-
-type NotParticipatingError {
-  message: String!
-  menuPlanId: UUID!
 }
 
 type UsernameAlreadyTakenError {
@@ -500,6 +500,11 @@ type RecipesEdge {
   The item at the end of the edge.
   """
   node: Recipe!
+}
+
+input BooleanOperationFilterInput {
+  eq: Boolean
+  neq: Boolean
 }
 
 input ListStringOperationFilterInput {

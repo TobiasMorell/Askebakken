@@ -48,6 +48,7 @@ export const residentsState = graphQLSelector({
           firstName
           lastName
           houseNumber
+          child
         }
       }
     }
