@@ -1,4 +1,11 @@
-import { atom, atomFamily, noWait, selector, useRecoilValue } from "recoil";
+import {
+  atom,
+  atomFamily,
+  noWait,
+  selector,
+  selectorFamily,
+  useRecoilValue,
+} from "recoil";
 import { graphQLSelector, graphQLSelectorFamily } from "recoil-relay";
 import { graphql } from "relay-runtime";
 import { RelayEnvironment } from "../../RelayEnvironment";
@@ -9,6 +16,13 @@ import { stateUserAttendanceQuery$data } from "../../__generated__/stateUserAtte
 import { stateMenuPlanAttendanceChangedSubscription$data } from "../../__generated__/stateMenuPlanAttendanceChangedSubscription.graphql";
 import { groupBy } from "../../utils/array-utils";
 import { AttendanceEvent } from "./types";
+import { appDisplayModeState } from "../../app-state/app-display-mode";
+import {
+  stateLoggedInUserHouseQuery$data,
+  stateLoggedInUserHouseQuery$variables,
+} from "../../__generated__/stateLoggedInUserHouseQuery.graphql";
+import { stateResidentsInHouseQuery$variables } from "../../__generated__/stateResidentsInHouseQuery.graphql";
+import { residentSelectQuery$data } from "../../__generated__/residentSelectQuery.graphql";
 
 export const startDateState = atom({
   key: "startDate",
@@ -37,7 +51,7 @@ export const selectedDaysState = selector<Date[]>({
   },
 });
 
-export const residentsState = graphQLSelector({
+const allResidents = graphQLSelector({
   key: "residents",
   environment: RelayEnvironment,
   query: graphql`
@@ -57,8 +71,58 @@ export const residentsState = graphQLSelector({
   mapResponse: (r: stateResidentsQuery$data) => r.residents?.nodes,
 });
 
+const loggedInUserHouse = graphQLSelector<
+  stateLoggedInUserHouseQuery$variables,
+  string
+>({
+  key: "loggedInUserHouse",
+  environment: RelayEnvironment,
+  query: graphql`
+    query stateLoggedInUserHouseQuery {
+      me {
+        houseNumber
+      }
+    }
+  `,
+  variables: {},
+  mapResponse: (r: stateLoggedInUserHouseQuery$data) => r.me.houseNumber,
+});
+
+const residentsInHouse = graphQLSelectorFamily({
+  key: "residentsInHouse",
+  environment: RelayEnvironment,
+  query: graphql`
+    query stateResidentsInHouseQuery($houseNumber: String) {
+      residents(where: { houseNumber: { eq: $houseNumber } }) {
+        nodes {
+          id
+          firstName
+          lastName
+          houseNumber
+          child
+        }
+      }
+    }
+  `,
+  variables: (houseNumber) => houseNumber,
+  mapResponse: (r: stateResidentsQuery$data) => r.residents?.nodes,
+});
+
+export const residentsState = selector({
+  key: "residentsState",
+  get: ({ get }) => {
+    const appDisplayMode = get(appDisplayModeState);
+    if (appDisplayMode === "SYSTEM") {
+      return get(allResidents);
+    }
+
+    const userHouse = get(loggedInUserHouse);
+    return get(residentsInHouse({ houseNumber: userHouse }));
+  },
+});
+
 export const menuPlanParticipantsState = graphQLSelector({
-  key: "menuPlanParticipants",
+  key: "plannerPageState_menuPlanParticipants",
   environment: RelayEnvironment,
   query: graphql`
     query stateMenuPlansQuery($startDate: DateTime, $endDate: DateTime) {

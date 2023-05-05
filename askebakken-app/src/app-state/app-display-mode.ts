@@ -3,7 +3,7 @@ import { localStorageEffect } from "../state/effects/localStorageEffect";
 
 export const appDisplayModeState = atom<"RESIDENT" | "SYSTEM">({
   key: "appDisplayMode",
-  default: getModeFromUrl(),
+  default: "RESIDENT",
   effects: [
     localStorageEffect("appDisplayMode", {
       stringify: (data) => data,
@@ -12,13 +12,7 @@ export const appDisplayModeState = atom<"RESIDENT" | "SYSTEM">({
   ],
 });
 
-function getModeFromUrl() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const mode = urlParams.get("mode");
-  return toAppDisplayMode(mode);
-}
-
-function toAppDisplayMode(mode: string | null) {
+export function toAppDisplayMode(mode: string | null) {
   const upperCased = mode?.toUpperCase();
   if (upperCased === "RESIDENT" || upperCased === "SYSTEM") {
     return upperCased;

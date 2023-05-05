@@ -4,7 +4,7 @@ import { RelayEnvironment } from "../../RelayEnvironment";
 import { foodTeamStateMenuPlansQuery$data } from "../../__generated__/foodTeamStateMenuPlansQuery.graphql";
 
 export const menuPlanChefState = graphQLSelectorFamily({
-  key: "menuPlanParticipants",
+  key: "foodTeamState_menuPlanParticipants",
   environment: RelayEnvironment,
   query: graphql`
     query foodTeamStateMenuPlansQuery(
