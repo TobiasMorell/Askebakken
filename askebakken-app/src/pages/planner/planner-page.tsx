@@ -12,6 +12,7 @@ import {
   Input,
   Center,
   Stack,
+  Tfoot,
 } from "@chakra-ui/react";
 import style from "./planner-page.module.css";
 import { useRecoilValue } from "recoil";
@@ -22,6 +23,7 @@ import { Resident } from "./types";
 import { useAutomaticWeekChange } from "./hooks";
 import { ToggleAttendanceButton } from "../login/components/toggle-attendance-button";
 import { RealTimeParticipantStatus } from "./components/RealTimeParticipantStatus";
+import { groupBy, toDictionary } from "../../utils/array-utils";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
@@ -36,15 +38,11 @@ export function PlannerPage() {
     () => [...new Set(residents?.map((r) => r.houseNumber))].sort(),
     [residents]
   );
-  const residentByHouse = useMemo(() => {
-    const result: Record<string, Resident[]> = {};
-    residents?.forEach((r) => {
-      if (!result[r.houseNumber]) {
-        result[r.houseNumber] = [];
-      }
-      result[r.houseNumber].push(r);
-    });
-    return result;
+  const residentsByHouse = useMemo(() => {
+    return groupBy(residents ?? [], (r) => r.houseNumber);
+  }, [residents]);
+  const residentById = useMemo(() => {
+    return toDictionary(residents ?? [], (r) => r.id);
   }, [residents]);
 
   return (
@@ -103,10 +101,45 @@ export function PlannerPage() {
               <PlannerTableHouseEntry
                 key={house}
                 house={house}
-                residents={residentByHouse[house]}
+                residents={residentsByHouse.get(house) ?? []}
               />
             ))}
           </Tbody>
+          <Tfoot>
+            <Tr borderBottom="2px solid black" borderTop="3px solid black">
+              <Th colSpan={2} background="gray.100">
+                <Center>Total</Center>
+              </Th>
+              {menuPlans.map((d) => (
+                <Th key={`total-${d.date.getDayOfYear()}`}>
+                  <PlannerTableEntry
+                    entries={[
+                      <Stack width="100%" padding="0 8px">
+                        <Flex justify="space-between">
+                          <Box>Voksne:</Box>
+                          <Box>
+                            {d.plan?.participants.filter(
+                              (p) => residentById.get(p?.id)?.child
+                            )?.length ?? 0}
+                          </Box>
+                        </Flex>
+                        <Flex justify="space-between">
+                          <Box>Børn:</Box>
+                          <Box>
+                            {d.plan?.participants.filter(
+                              (p) => residentById.get(p?.id)?.child
+                            )?.length ?? 0}
+                          </Box>
+                        </Flex>
+                      </Stack>,
+                      <Center>0</Center>,
+                      <Center>0</Center>,
+                    ]}
+                  />
+                </Th>
+              ))}
+            </Tr>
+          </Tfoot>
         </Table>
       </TableContainer>
     </>

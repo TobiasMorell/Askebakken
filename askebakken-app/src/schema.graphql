@@ -9,7 +9,9 @@ type MenuPlan {
   participantIds: [UUID!]!
   recipes: [Recipe!]!
   participants: [Resident!]!
+  chefs: [Resident!]!
   date: DateTime!
+  chefIds: [UUID!]
   id: UUID!
   createdAt: DateTime!
   modifiedAt: DateTime!
@@ -20,10 +22,14 @@ type Resident {
   participatesInIds: [UUID!]!
   weekPlans: [WeekPlan!]!
   participatesIn: [MenuPlan!]!
+  cooksIn: [MenuPlan!]!
   username: String!
   firstName: String
   lastName: String
+  birthDate: DateTime!
+  child: Boolean!
   houseNumber: String!
+  cooksInIds: [UUID!]
   id: UUID!
   createdAt: DateTime!
   modifiedAt: DateTime!
@@ -147,6 +153,12 @@ type Mutation {
   createWeekPlan(createWeekPlan: CreateWeekPlanInput!): [MenuPlan!]!
   attend(input: MenuPlanAttendanceInput!): MenuPlan!
   unattend(input: MenuPlanAttendanceInput!): MenuPlan!
+  signUpForCooking(date: DateTime!, residentId: UUID): MenuPlan!
+  removeSignUpForCooking(
+    date: DateTime!
+    residentId: UUID
+    retainParticipation: Boolean
+  ): MenuPlan!
   createResident(resident: CreateResidentInput!): Resident!
   authenticate(authenticateInput: AuthenticateInput!): AuthenticateResult!
   forgotPassword(forgotPasswordInput: ForgotPasswordInput!): SuccessResult!
@@ -186,6 +198,8 @@ input MenuPlanFilterInput {
   date: DateTimeOperationFilterInput
   participantIds: ListUuidOperationFilterInput
   participants: ListFilterInputTypeOfResidentFilterInput
+  chefIds: ListUuidOperationFilterInput
+  chefs: ListFilterInputTypeOfResidentFilterInput
   id: UuidOperationFilterInput
   createdAt: DateTimeOperationFilterInput
   modifiedAt: DateTimeOperationFilterInput
@@ -263,12 +277,16 @@ input ResidentFilterInput {
   passwordHash: StringOperationFilterInput
   firstName: StringOperationFilterInput
   lastName: StringOperationFilterInput
+  birthDate: DateTimeOperationFilterInput
+  child: BooleanOperationFilterInput
   houseNumber: StringOperationFilterInput
   roles: ListStringOperationFilterInput
   weekPlanIds: ListUuidOperationFilterInput
   weekPlans: ListFilterInputTypeOfWeekPlanFilterInput
   participatesInIds: ListUuidOperationFilterInput
   participatesIn: ListFilterInputTypeOfMenuPlanFilterInput
+  cooksInIds: ListUuidOperationFilterInput
+  cooksIn: ListFilterInputTypeOfMenuPlanFilterInput
   id: UuidOperationFilterInput
   createdAt: DateTimeOperationFilterInput
   modifiedAt: DateTimeOperationFilterInput
@@ -279,6 +297,8 @@ input ResidentSortInput {
   passwordHash: SortEnumType
   firstName: SortEnumType
   lastName: SortEnumType
+  birthDate: SortEnumType
+  child: SortEnumType
   houseNumber: SortEnumType
   id: SortEnumType
   createdAt: SortEnumType
@@ -358,14 +378,8 @@ type MenuPlanAlreadyExistsErrors {
   message: String!
 }
 
-type AlreadyParticipatingError {
+type EventIsInThePastError {
   message: String!
-  menuPlanId: UUID!
-}
-
-type NotParticipatingError {
-  message: String!
-  menuPlanId: UUID!
 }
 
 type UsernameAlreadyTakenError {
@@ -502,6 +516,11 @@ type RecipesEdge {
   node: Recipe!
 }
 
+input BooleanOperationFilterInput {
+  eq: Boolean
+  neq: Boolean
+}
+
 input ListStringOperationFilterInput {
   all: StringOperationFilterInput
   none: StringOperationFilterInput
@@ -568,12 +587,6 @@ type WeekPlanEdge {
   node: WeekPlan!
 }
 
-type AttendanceChangedEventMessage {
-  menuPlanId: UUID!
-  residentId: UUID!
-  attending: Boolean!
-}
-
 input ChangePasswordInput {
   username: String!
   oldPassword: String!
@@ -627,4 +640,10 @@ input CreateMenuPlanInput {
 input CreateRecipeInput {
   name: String!
   category: String!
+}
+
+type AttendanceChangedEventMessage {
+  menuPlanId: UUID!
+  residentId: UUID!
+  attending: Boolean!
 }

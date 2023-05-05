@@ -1,16 +1,23 @@
 import { AtomEffect } from "recoil";
 
-export function localStorageEffect(key: string): AtomEffect<string | null> {
+export function localStorageEffect<TData>(
+  key: string,
+  mapping: {
+    stringify: (data: TData) => string;
+    parse: (data: string | null) => TData;
+  }
+): AtomEffect<TData> {
   return ({ setSelf, onSet }) => {
     const savedValue = localStorage.getItem(key);
+    const converted = mapping.parse(savedValue);
     if (savedValue != null) {
-      setSelf(savedValue);
+      setSelf(converted);
     }
 
     onSet((newValue, _, isReset) => {
       isReset || newValue == null
         ? localStorage.removeItem(key)
-        : localStorage.setItem(key, newValue);
+        : localStorage.setItem(key, mapping.stringify(newValue));
     });
   };
 }

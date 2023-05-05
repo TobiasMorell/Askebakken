@@ -6,34 +6,55 @@ namespace Askebakken.GraphQL.Schema;
 [BsonIgnoreExtraElements]
 public class MenuPlan : SchemaBase
 {
-    
     public ICollection<Guid> RecipeIds { get; set; }
-    [BsonIgnore]
-    public ICollection<Recipe> Recipes { get; set; }
+    [BsonIgnore] public ICollection<Recipe> Recipes { get; set; }
 
     public DateTime Date { get; set; }
 
     public ICollection<Guid> ParticipantIds { get; set; }
-    [BsonIgnore]
-    public ICollection<Resident> Participants { get; set; }
+    [BsonIgnore] public ICollection<Resident> Participants { get; set; }
+
+    public ICollection<Guid>? ChefIds { get; set; }
+    [BsonIgnore] public ICollection<Resident> Chefs { get; set; }
 }
 
 public class MenuPlanRelationResolver
 {
-    public async Task<ICollection<Recipe>> GetRecipes([Parent] MenuPlan menuPlan, [Service] IMongoCollection<Recipe> collection)
+    public async Task<ICollection<Recipe>> GetRecipes([Parent] MenuPlan menuPlan,
+        [Service] IMongoCollection<Recipe> collection,
+        CancellationToken cancellationToken = default)
     {
         var recipeIds = menuPlan.RecipeIds.ToHashSet();
-        var recipeCursor = await collection.FindAsync(r => recipeIds.Contains(r.Id));
-        var recipes = await recipeCursor.ToListAsync();
+        var recipeCursor =
+            await collection.FindAsync(r => recipeIds.Contains(r.Id), cancellationToken: cancellationToken);
+        var recipes = await recipeCursor.ToListAsync(cancellationToken: cancellationToken);
         return recipes;
     }
-    
-    public async Task<ICollection<Resident>> GetParticipants([Parent] MenuPlan menuPlan, [Service] IMongoCollection<Resident> collection)
+
+    public async Task<ICollection<Resident>> GetParticipants([Parent] MenuPlan menuPlan,
+        [Service] IMongoCollection<Resident> collection,
+        CancellationToken cancellationToken = default)
     {
         var participantIds = menuPlan.ParticipantIds.ToHashSet();
-        var participantCursor = await collection.FindAsync(r => participantIds.Contains(r.Id));
-        var participants = await participantCursor.ToListAsync();
+        var participantCursor =
+            await collection.FindAsync(r => participantIds.Contains(r.Id), cancellationToken: cancellationToken);
+        var participants = await participantCursor.ToListAsync(cancellationToken: cancellationToken);
         return participants;
+    }
+
+    public async Task<ICollection<Resident>> GetChefs([Parent] MenuPlan menuPlan,
+        [Service] IMongoCollection<Resident> collection,
+        CancellationToken cancellationToken = default)
+    {
+        if (menuPlan.ChefIds is null)
+        {
+            return Array.Empty<Resident>();
+        }
+        
+        var chefIds = menuPlan.ChefIds.ToHashSet();
+        var chefCursor = await collection.FindAsync(r => chefIds.Contains(r.Id), cancellationToken: cancellationToken);
+        var chefs = await chefCursor.ToListAsync(cancellationToken: cancellationToken);
+        return chefs;
     }
 }
 
@@ -43,10 +64,14 @@ public class MenuPlanType : ObjectType<MenuPlan>
     {
         descriptor.Field(mp => mp.RecipeIds).IsProjected();
         descriptor.Field(mp => mp.ParticipantIds).IsProjected();
-        
-        descriptor.Field(mp => mp.Recipes).ResolveWith<MenuPlanRelationResolver>(q => q.GetRecipes(default!, default));
-        descriptor.Field(mp => mp.Participants).ResolveWith<MenuPlanRelationResolver>(q => q.GetParticipants(default!, default));
-        
+        descriptor.Field(mp => mp.ChefIds).IsProjected();
+
+        descriptor.Field(mp => mp.Recipes).ResolveWith<MenuPlanRelationResolver>(q => q.GetRecipes(default!, default, default));
+        descriptor.Field(mp => mp.Participants)
+            .ResolveWith<MenuPlanRelationResolver>(q => q.GetParticipants(default!, default, default));
+        descriptor.Field(mp => mp.Chefs)
+            .ResolveWith<MenuPlanRelationResolver>(q => q.GetChefs(default!, default, default));
+
         base.Configure(descriptor);
     }
 }

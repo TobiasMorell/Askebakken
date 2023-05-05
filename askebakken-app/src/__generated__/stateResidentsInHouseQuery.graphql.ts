@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<8f45bd1506bb5d14d818919f4fb2ee9f>>
+ * @generated SignedSource<<995b61eaeb15b33df73841de912b68f0>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,8 +9,10 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type stateResidentsQuery$variables = {};
-export type stateResidentsQuery$data = {
+export type stateResidentsInHouseQuery$variables = {
+  houseNumber?: string | null;
+};
+export type stateResidentsInHouseQuery$data = {
   readonly residents: {
     readonly nodes: ReadonlyArray<{
       readonly child: boolean;
@@ -21,16 +23,41 @@ export type stateResidentsQuery$data = {
     }> | null;
   } | null;
 };
-export type stateResidentsQuery = {
-  response: stateResidentsQuery$data;
-  variables: stateResidentsQuery$variables;
+export type stateResidentsInHouseQuery = {
+  response: stateResidentsInHouseQuery$data;
+  variables: stateResidentsInHouseQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
 var v0 = [
   {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "houseNumber"
+  }
+],
+v1 = [
+  {
     "alias": null,
-    "args": null,
+    "args": [
+      {
+        "fields": [
+          {
+            "fields": [
+              {
+                "kind": "Variable",
+                "name": "eq",
+                "variableName": "houseNumber"
+              }
+            ],
+            "kind": "ObjectValue",
+            "name": "houseNumber"
+          }
+        ],
+        "kind": "ObjectValue",
+        "name": "where"
+      }
+    ],
     "concreteType": "ResidentsConnection",
     "kind": "LinkedField",
     "name": "residents",
@@ -88,32 +115,32 @@ var v0 = [
 ];
 return {
   "fragment": {
-    "argumentDefinitions": [],
+    "argumentDefinitions": (v0/*: any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "stateResidentsQuery",
-    "selections": (v0/*: any*/),
+    "name": "stateResidentsInHouseQuery",
+    "selections": (v1/*: any*/),
     "type": "Query",
     "abstractKey": null
   },
   "kind": "Request",
   "operation": {
-    "argumentDefinitions": [],
+    "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
-    "name": "stateResidentsQuery",
-    "selections": (v0/*: any*/)
+    "name": "stateResidentsInHouseQuery",
+    "selections": (v1/*: any*/)
   },
   "params": {
-    "cacheID": "2338ed89d0e75151141f545a927f4ee6",
+    "cacheID": "e5ffe19759d6ad1ab0bc73cc4cf19af0",
     "id": null,
     "metadata": {},
-    "name": "stateResidentsQuery",
+    "name": "stateResidentsInHouseQuery",
     "operationKind": "query",
-    "text": "query stateResidentsQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
+    "text": "query stateResidentsInHouseQuery(\n  $houseNumber: String\n) {\n  residents(where: {houseNumber: {eq: $houseNumber}}) {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "a820b200d7dfba70e9b0278bb963b4fb";
+(node as any).hash = "ba51729639f4577f31838092399f3179";
 
 export default node;

@@ -26,6 +26,9 @@ const ForgotPasswordPage = React.lazy(
 const CreateMenuPlanPage = React.lazy(
   () => import("./pages/create-menu-plan/create-menu-plan-page")
 );
+const FoodTeamPage = React.lazy(
+  () => import("./pages/food-team/food-team-page")
+);
 
 const router = createBrowserRouter([
   {
@@ -34,6 +37,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, Component: PlannerPage },
       { path: "add-plan", Component: CreateMenuPlanPage },
+      { path: "food-team", Component: FoodTeamPage },
     ],
   },
   {
@@ -85,7 +89,11 @@ function Layout() {
               href: "/",
             },
             {
-              text: "Madplan",
+              text: "Madhold",
+              href: "food-team",
+            },
+            {
+              text: "Opret Madplan",
               href: "add-plan",
             },
           ]}
@@ -98,7 +106,7 @@ function Layout() {
 }
 
 function Fallback(props: FallbackProps) {
-  const navigate = useNavigate();
+  const [hasNavigated, setHasNavigated] = React.useState(false);
 
   useEffect(() => {
     const errors:
@@ -107,10 +115,13 @@ function Fallback(props: FallbackProps) {
 
     if (errors?.some((e) => e.extensions.code === "AUTH_NOT_AUTHORIZED")) {
       clearAuthToken();
-      props.resetErrorBoundary();
-      navigate("/login", { replace: true });
+      if (!hasNavigated) {
+        setHasNavigated(true);
+        // Hard refresh window to clear relay cache
+        window.location.replace("/login");
+      }
     }
-  }, [props?.error, navigate, props?.resetErrorBoundary]);
+  }, [props?.error, hasNavigated, setHasNavigated]);
 
   useEffect(() => {
     if (window.location.hostname === "localhost") {
