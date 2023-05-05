@@ -22,12 +22,14 @@ type Resident {
   participatesInIds: [UUID!]!
   weekPlans: [WeekPlan!]!
   participatesIn: [MenuPlan!]!
+  cooksIn: [MenuPlan!]!
   username: String!
   firstName: String
   lastName: String
   birthDate: DateTime!
   child: Boolean!
   houseNumber: String!
+  cooksInIds: [UUID!]
   id: UUID!
   createdAt: DateTime!
   modifiedAt: DateTime!
@@ -151,6 +153,12 @@ type Mutation {
   createWeekPlan(createWeekPlan: CreateWeekPlanInput!): [MenuPlan!]!
   attend(input: MenuPlanAttendanceInput!): MenuPlan!
   unattend(input: MenuPlanAttendanceInput!): MenuPlan!
+  signUpForCooking(date: DateTime!, residentId: UUID): MenuPlan!
+  removeSignUpForCooking(
+    date: DateTime!
+    residentId: UUID
+    retainParticipation: Boolean
+  ): MenuPlan!
   createResident(resident: CreateResidentInput!): Resident!
   authenticate(authenticateInput: AuthenticateInput!): AuthenticateResult!
   forgotPassword(forgotPasswordInput: ForgotPasswordInput!): SuccessResult!
@@ -277,6 +285,8 @@ input ResidentFilterInput {
   weekPlans: ListFilterInputTypeOfWeekPlanFilterInput
   participatesInIds: ListUuidOperationFilterInput
   participatesIn: ListFilterInputTypeOfMenuPlanFilterInput
+  cooksInIds: ListUuidOperationFilterInput
+  cooksIn: ListFilterInputTypeOfMenuPlanFilterInput
   id: UuidOperationFilterInput
   createdAt: DateTimeOperationFilterInput
   modifiedAt: DateTimeOperationFilterInput
@@ -365,6 +375,10 @@ type NotFoundError {
 }
 
 type MenuPlanAlreadyExistsErrors {
+  message: String!
+}
+
+type EventIsInThePastError {
   message: String!
 }
 
@@ -573,12 +587,6 @@ type WeekPlanEdge {
   node: WeekPlan!
 }
 
-type AttendanceChangedEventMessage {
-  menuPlanId: UUID!
-  residentId: UUID!
-  attending: Boolean!
-}
-
 input ChangePasswordInput {
   username: String!
   oldPassword: String!
@@ -632,4 +640,10 @@ input CreateMenuPlanInput {
 input CreateRecipeInput {
   name: String!
   category: String!
+}
+
+type AttendanceChangedEventMessage {
+  menuPlanId: UUID!
+  residentId: UUID!
+  attending: Boolean!
 }

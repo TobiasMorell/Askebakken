@@ -1,12 +1,10 @@
-namespace Askebakken.GraphQL.Schema.Subscriptions;
+using HotChocolate.Authorization;
 
-public record AttendanceChangedEventMessage(Guid MenuPlanId, Guid ResidentId, bool Attending)
-{
-    public const string Topic = "MenuPlanAttendanceChanged";
-}
+namespace Askebakken.GraphQL.Schema.Subscriptions;
 
 public class Subscriptions
 {
+    [Authorize]
     [Subscribe]
     [Topic(AttendanceChangedEventMessage.Topic)]
     public AttendanceChangedEventMessage MenuPlanAttendanceChanged(

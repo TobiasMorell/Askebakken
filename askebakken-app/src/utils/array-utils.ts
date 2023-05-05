@@ -31,3 +31,15 @@ export function toDictionary<TKey extends { toString(): string }, T>(
   });
   return map;
 }
+
+export function enumerate(options: {
+  from?: number;
+  to: number;
+  step?: number;
+}) {
+  const { from = 0, to, step = 1 } = options;
+  return Array.from(
+    { length: Math.floor((to - 1 - from) / step) + 1 },
+    (_, i) => from + i * step
+  );
+}

@@ -48,12 +48,13 @@ import {
   useRecoilValueLoadable,
 } from "recoil";
 import { graphql, useMutation } from "react-relay";
-import { toDictionary } from "../../utils/array-utils";
+import { enumerate, toDictionary } from "../../utils/array-utils";
 import { Recipe } from "../planner/types";
 import {
   CreateRecipeInput,
   createMenuPlanPageMutation$variables,
 } from "../../__generated__/createMenuPlanPageMutation.graphql";
+import { getWeekDates } from "../../utils/date-utils";
 
 type MenuPlanWithOptionalId = Omit<MenuPlan, "id"> & { id: string | undefined };
 
@@ -145,7 +146,7 @@ export default function CreateMenuPlanPage() {
             onChange={(v) => setWeek(Number.parseInt(v.target.value))}
             width="200px"
           >
-            {Array.from({ length: 52 }, (_, i) => i + 1).map((i) => (
+            {enumerate({ to: 52 }).map((i) => (
               <option key={i} value={i}>
                 {i}
               </option>
@@ -158,10 +159,7 @@ export default function CreateMenuPlanPage() {
             onChange={(v) => setYear(Number.parseInt(v.target.value))}
             width="200px"
           >
-            {Array.from(
-              { length: 10 },
-              (_, i) => i + new Date().getFullYear() - 2
-            ).map((i) => (
+            {enumerate({ to: 10 }).map((i) => (
               <option key={i} value={i}>
                 {i}
               </option>
@@ -516,13 +514,5 @@ function Principles() {
         </UnorderedList>
       </Box>
     </Stack>
-  );
-}
-
-function getWeekDates(weekNumber: number, year: number): Date[] {
-  const monday = new Date(year, 0, 2 + (weekNumber - 1) * 7);
-
-  return Array.from({ length: 5 }, (_, i) => i).map(
-    (i) => new Date(monday.getTime() + i * 24 * 60 * 60 * 1000)
   );
 }

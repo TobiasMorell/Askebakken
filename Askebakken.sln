@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{F453C516
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Askebakken.GraphQL.Tests", "Askebakken.GraphQL.Tests\Askebakken.GraphQL.Tests.csproj", "{41573600-3C8C-4685-9079-A84BE250B079}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B431C642-C54D-4678-ACEE-7B6865800586}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B431C642-C54D-4678-ACEE-7B6865800586}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B431C642-C54D-4678-ACEE-7B6865800586}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41573600-3C8C-4685-9079-A84BE250B079}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41573600-3C8C-4685-9079-A84BE250B079}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41573600-3C8C-4685-9079-A84BE250B079}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41573600-3C8C-4685-9079-A84BE250B079}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

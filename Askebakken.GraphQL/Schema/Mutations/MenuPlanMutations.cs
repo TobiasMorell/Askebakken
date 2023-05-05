@@ -1,23 +1,36 @@
-using System.Security.Claims;
+using Askebakken.GraphQL.Repository.MenuPlan;
 using Askebakken.GraphQL.Repository.Recipe;
+using Askebakken.GraphQL.Repository.Resident;
 using Askebakken.GraphQL.Schema.Errors;
 using Askebakken.GraphQL.Schema.Inputs;
-using Askebakken.GraphQL.Schema.Subscriptions;
 using Askebakken.GraphQL.Services;
 using HotChocolate.Authorization;
-using HotChocolate.Subscriptions;
-using MongoDB.Driver;
 
 namespace Askebakken.GraphQL.Schema.Mutations;
 
 [ExtendObjectType("Mutation")]
 public class MenuPlanMutations
 {
+    private readonly IMenuPlanRepository _menuPlanRepository;
+    private readonly IResidentRepository _residentRepository;
+    private readonly IUserService _userService;
+    private readonly IMenuPlannerService _menuPlannerService;
+
+    public MenuPlanMutations(IMenuPlanRepository menuPlanRepository,
+        IResidentRepository residentRepository,
+        IUserService userService,
+        IMenuPlannerService menuPlannerService)
+    {
+        _menuPlanRepository = menuPlanRepository;
+        _residentRepository = residentRepository;
+        _userService = userService;
+        _menuPlannerService = menuPlannerService;
+    }
+
     [Error<NotFoundError>]
     [Error<MenuPlanAlreadyExistsErrors>]
     [Authorize]
-    public async Task<MenuPlan> CreateMenuPlan([Service] IMongoCollection<MenuPlan> collection,
-        [Service] IRecipeRepository recipeRepo,
+    public async Task<MenuPlan> CreateMenuPlan([Service] IRecipeRepository recipeRepo,
         CreateMenuPlanInput createMenuPlan,
         CancellationToken cancellationToken = default)
     {
@@ -29,45 +42,34 @@ public class MenuPlanMutations
             throw new NotFoundError(nameof(Recipe), missingRecipeIds);
         }
 
-        var startOfRecipeDate = createMenuPlan.Date.Date;
-        var endOfRecipeDate = createMenuPlan.Date.Date.AddDays(1);
-        var existingMenuPlan = await collection.FindAsync(
-            mp => mp.Date >= startOfRecipeDate && mp.Date < endOfRecipeDate, cancellationToken: cancellationToken);
-        if (await existingMenuPlan.AnyAsync(cancellationToken: cancellationToken))
+        var existingMenuPlan = await _menuPlanRepository.GetMenuPlanByDate(createMenuPlan.Date, cancellationToken);
+        if (existingMenuPlan is not null)
         {
             throw new MenuPlanAlreadyExistsErrors(createMenuPlan.Date);
         }
 
         var actual = new MenuPlan()
         {
-            Id = Guid.NewGuid(),
-            RecipeIds = foundRecipeIds,
-            ParticipantIds = Array.Empty<Guid>(),
-            Date = createMenuPlan.Date.Date,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            RecipeIds = foundRecipeIds, ParticipantIds = Array.Empty<Guid>(), Date = createMenuPlan.Date.Date,
         };
-        await collection.InsertOneAsync(actual, cancellationToken: cancellationToken);
+
+        await _menuPlanRepository.CreateMenuPlan(actual, cancellationToken);
+
         return actual;
     }
 
     [Error<NotFoundError>]
     [Error<MenuPlanAlreadyExistsErrors>]
     [Authorize]
-    public async Task<IEnumerable<MenuPlan>> CreateWeekPlan([Service] IMongoCollection<MenuPlan> collection,
-        [Service] IRecipeRepository recipeRepo,
+    public async Task<IEnumerable<MenuPlan>> CreateWeekPlan([Service] IRecipeRepository recipeRepo,
         CreateWeekPlanInput createWeekPlan,
         CancellationToken cancellationToken = default)
     {
-        var startOfRecipeDate = createWeekPlan.FromDate.Date;
-        var endOfRecipeDate = startOfRecipeDate.AddDays(5);
-        var existingMenuPlans =
-            await (await collection.FindAsync(mp => mp.Date >= startOfRecipeDate && mp.Date < endOfRecipeDate,
-                cancellationToken: cancellationToken)).ToListAsync(cancellationToken: cancellationToken);
+        var existingMenuPlans = await _menuPlanRepository.GetMenuPlansBetween(createWeekPlan.FromDate,
+            createWeekPlan.FromDate.AddDays(5), cancellationToken);
         if (existingMenuPlans.Any())
         {
-            var existingMenuPlanIds = existingMenuPlans.Select(mp => mp.Id).ToHashSet();
-            await collection.DeleteManyAsync(mp => existingMenuPlanIds.Contains(mp.Id), cancellationToken: cancellationToken);
+            await _menuPlanRepository.Delete(existingMenuPlans.Select(mp => mp.Id), cancellationToken);
         }
 
         var weekRecipes = new[]
@@ -76,13 +78,13 @@ public class MenuPlanMutations
             createWeekPlan.Friday
         };
         var results = new List<MenuPlan>();
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             var date = createWeekPlan.FromDate.Date.AddDays(i);
 
             var recipes = await recipeRepo.BulkCreateRecipeAsync(weekRecipes[i], cancellationToken);
 
-            var menuPlan = await CreateMenuPlan(collection, recipeRepo,
+            var menuPlan = await CreateMenuPlan(recipeRepo,
                 new CreateMenuPlanInput() { Date = date, Recipes = recipes.Select(r => r.Id).ToArray() },
                 cancellationToken);
 
@@ -94,92 +96,140 @@ public class MenuPlanMutations
 
     [Error<NotFoundError>]
     [Authorize]
-    public async Task<MenuPlan> Attend([Service] IMongoCollection<MenuPlan> collection,
-        [Service] IMongoCollection<Resident> residentCollection,
-        [Service] IUserService userService,
-        [Service] ITopicEventSender eventSender,
-        MenuPlanAttendanceInput input,
-        CancellationToken cancellationToken = default)
+    public async Task<MenuPlan> Attend(MenuPlanAttendanceInput input, CancellationToken cancellationToken = default)
     {
-        var menuPlanId = input.MenuPlanId;
-        var menuPlan =
-            await (await collection.FindAsync(mp => mp.Id == menuPlanId, cancellationToken: cancellationToken))
-                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        var menuPlan = await _menuPlanRepository.GetMenuPlanById(input.MenuPlanId, cancellationToken);
         if (menuPlan is null)
         {
-            throw new NotFoundError(nameof(MenuPlan), menuPlanId);
+            throw new NotFoundError(nameof(MenuPlan), input.MenuPlanId);
         }
 
-        var residentToAttend = input.ResidentId ?? (await userService.GetAuthenticatedUser(cancellationToken))!.Id;
+        var residentToAttend = input.ResidentId.HasValue
+            ? await _residentRepository.GetResidentById(input.ResidentId.Value, cancellationToken)
+            : await _userService.GetAuthenticatedUser(cancellationToken);
+        if (residentToAttend is null)
+        {
+            throw new NotFoundError(nameof(Resident), input.ResidentId ?? Guid.Empty);
+        }
+
         var participantIds = menuPlan.ParticipantIds.ToHashSet();
-        if (participantIds.Contains(residentToAttend))
+        if (participantIds.Contains(residentToAttend.Id))
         {
             return menuPlan;
         }
 
-        participantIds.Add(residentToAttend);
-        menuPlan.ParticipantIds = participantIds;
-        var replaceMenuPlan =
-            collection.ReplaceOneAsync(mp => mp.Id == menuPlanId, menuPlan, cancellationToken: cancellationToken);
-
-        var resident =
-            await (await residentCollection.FindAsync(r => r.Id == residentToAttend,
-                cancellationToken: cancellationToken)).FirstOrDefaultAsync(cancellationToken: cancellationToken);
-        var updateResident = residentCollection.FindOneAndUpdateAsync(r => r.Id == residentToAttend,
-            Builders<Resident>.Update.Set(r => r.ParticipatesInIds,
-                resident.ParticipatesInIds.Append(menuPlanId).ToArray()), cancellationToken: cancellationToken);
-
-        await Task.WhenAll(replaceMenuPlan, updateResident);
-
-        await eventSender.SendAsync(AttendanceChangedEventMessage.Topic,
-            new AttendanceChangedEventMessage(menuPlanId, residentToAttend, true), cancellationToken);
+        await _menuPlannerService.AttendMenuPlan(menuPlan, residentToAttend, cancellationToken);
 
         return menuPlan;
     }
 
     [Error<NotFoundError>]
     [Authorize]
-    public async Task<MenuPlan> Unattend([Service] IMongoCollection<MenuPlan> collection,
-        [Service] IMongoCollection<Resident> residentCollection,
-        [Service] IUserService userService,
-        [Service] ITopicEventSender eventSender,
-        MenuPlanAttendanceInput input,
-        CancellationToken cancellationToken = default)
+    public async Task<MenuPlan> Unattend(MenuPlanAttendanceInput input, CancellationToken cancellationToken = default)
     {
-        var menuPlanId = input.MenuPlanId;
-        var menuPlan =
-            await (await collection.FindAsync(mp => mp.Id == menuPlanId, cancellationToken: cancellationToken))
-                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        var menuPlan = await _menuPlanRepository.GetMenuPlanById(input.MenuPlanId, cancellationToken);
         if (menuPlan is null)
         {
-            throw new NotFoundError(nameof(MenuPlan), menuPlanId);
+            throw new NotFoundError(nameof(MenuPlan), input.MenuPlanId);
         }
 
-        var residentToAttend = input.ResidentId ?? (await userService.GetAuthenticatedUser(cancellationToken))!.Id;
+        var residentToAttend = input.ResidentId.HasValue
+            ? await _residentRepository.GetResidentById(input.ResidentId.Value, cancellationToken)
+            : await _userService.GetAuthenticatedUser(cancellationToken);
+        if (residentToAttend is null)
+        {
+            throw new NotFoundError(nameof(Resident), input.ResidentId ?? Guid.Empty);
+        }
+
         var participantIds = menuPlan.ParticipantIds.ToHashSet();
-        if (!participantIds.Contains(residentToAttend))
+        if (!participantIds.Contains(residentToAttend.Id))
         {
             return menuPlan;
         }
 
-        participantIds.Remove(residentToAttend);
-        menuPlan.ParticipantIds = participantIds;
-        var replaceMenuPlan =
-            collection.ReplaceOneAsync(mp => mp.Id == menuPlanId, menuPlan, cancellationToken: cancellationToken);
-
-        var resident =
-            await (await residentCollection.FindAsync(r => r.Id == residentToAttend,
-                cancellationToken: cancellationToken)).FirstOrDefaultAsync(cancellationToken: cancellationToken);
-        var updateResident = residentCollection.FindOneAndUpdateAsync(r => r.Id == residentToAttend,
-            Builders<Resident>.Update.Set(r => r.ParticipatesInIds,
-                resident.ParticipatesInIds.Where(p => p != menuPlanId).ToArray()),
-            cancellationToken: cancellationToken);
-
-        await Task.WhenAll(replaceMenuPlan, updateResident);
-        
-        await eventSender.SendAsync(AttendanceChangedEventMessage.Topic,
-            new AttendanceChangedEventMessage(menuPlanId, residentToAttend, false), cancellationToken);
+        await _menuPlannerService.UnattendMenuPlan(menuPlan, residentToAttend, cancellationToken);
 
         return menuPlan;
+    }
+
+    [Error<NotFoundError>]
+    [Error<EventIsInThePastError>]
+    [Authorize]
+    public async Task<MenuPlan> SignUpForCooking(DateTime date,
+        Guid? residentId = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (date.Date < DateTime.Today)
+        {
+            throw new EventIsInThePastError();
+        }
+        
+        var chef = residentId.HasValue ? await _residentRepository.GetResidentById(residentId.Value, cancellationToken) : await _userService.GetAuthenticatedUser(cancellationToken);
+        if (chef is null)
+        {
+            throw new NotFoundError(nameof(Resident), residentId ?? Guid.Empty);
+        }
+        
+        var existingPlan = await _menuPlanRepository.GetMenuPlanByDate(date, cancellationToken);
+        if (existingPlan is null)
+        {
+            existingPlan = new MenuPlan()
+            {
+                Date = date, RecipeIds = Array.Empty<Guid>(), ParticipantIds = Array.Empty<Guid>(),
+            };
+            await _menuPlanRepository.CreateMenuPlan(existingPlan, cancellationToken);
+        }
+        else if (existingPlan.ChefIds?.Contains(chef.Id) is true)
+        {
+            return existingPlan;
+        }
+        else if (existingPlan.ChefIds is { Count: >= 2 })
+        {
+            throw new TooManyCooksError();
+        }
+        
+        await _menuPlannerService.SignUpForCooking(existingPlan, chef, cancellationToken);
+        await _menuPlannerService.AttendMenuPlan(existingPlan, chef, cancellationToken);
+
+        return existingPlan;
+    }
+
+    [Error<NotFoundError>]
+    [Error<EventIsInThePastError>]
+    [Authorize]
+    public async Task<MenuPlan> RemoveSignUpForCooking(DateTime date,
+        Guid? residentId = null,
+        bool? retainParticipation = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (date.Date < DateTime.Today)
+        {
+            throw new EventIsInThePastError();
+        }
+        
+        var chef = residentId.HasValue ? await _residentRepository.GetResidentById(residentId.Value, cancellationToken) : await _userService.GetAuthenticatedUser(cancellationToken);
+        if (chef is null)
+        {
+            throw new NotFoundError(nameof(Resident), residentId ?? Guid.Empty);
+        }
+        
+        var existingPlan = await _menuPlanRepository.GetMenuPlanByDate(date, cancellationToken);
+        if (existingPlan is null)
+        {
+            throw new NotFoundError(nameof(MenuPlan));
+        }
+
+        if (existingPlan.ChefIds?.Contains(chef.Id) is not true)
+        {
+            return existingPlan;
+        }
+        
+        await _menuPlannerService.RemoveFromCooking(existingPlan, chef, cancellationToken);
+        if (retainParticipation is not true)
+        {
+            await _menuPlannerService.UnattendMenuPlan(existingPlan, chef, cancellationToken);
+        }
+
+        return existingPlan;
     }
 }
