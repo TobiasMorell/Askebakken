@@ -40,8 +40,7 @@ public static class GraphQlMongoDbServiceCollectionExtensions
         services.AddQueryType(q => q.Name("Query"))
             .AddType<MenuPlanQuery>().AddMongoDbFiltering().AddMongoDbSorting().AddMongoDbProjections()
             .AddType<RecipeQuery>().AddMongoDbFiltering().AddMongoDbSorting().AddMongoDbProjections()
-            .AddType<ResidentQuery>().AddMongoDbFiltering().AddMongoDbSorting().AddMongoDbProjections()
-            .AddType<WeekPlanQuery>().AddMongoDbFiltering().AddMongoDbSorting().AddMongoDbProjections();
+            .AddType<ResidentQuery>().AddMongoDbFiltering().AddMongoDbSorting().AddMongoDbProjections();
 
         services.AddMutationType(m => m.Name("Mutation")).AddType<RecipeMutations>().AddType<MenuPlanMutations>().AddType<ResidentMutations>();
         services.AddSubscriptionType<Subscriptions>();

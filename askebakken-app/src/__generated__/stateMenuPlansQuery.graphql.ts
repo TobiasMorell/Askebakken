@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<e1f62fcb3c10e3ea1a3a51e4b7e13a7d>>
+ * @generated SignedSource<<1682b99b775fef4f71b06bd57d8eb444>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,13 +10,18 @@
 
 import { ConcreteRequest, Query } from 'relay-runtime';
 export type stateMenuPlansQuery$variables = {
-  endDate?: any | null;
-  startDate?: any | null;
+  endDate: any;
+  startDate: any;
 };
 export type stateMenuPlansQuery$data = {
   readonly menuPlan: {
     readonly nodes: ReadonlyArray<{
       readonly date: any;
+      readonly guests: ReadonlyArray<{
+        readonly houseNumber: string;
+        readonly numberOfAdultGuests: number;
+        readonly numberOfChildGuests: number;
+      }>;
       readonly id: any;
       readonly participants: ReadonlyArray<{
         readonly id: any;
@@ -153,6 +158,38 @@ v3 = [
               (v2/*: any*/)
             ],
             "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "concreteType": "Guest",
+            "kind": "LinkedField",
+            "name": "guests",
+            "plural": true,
+            "selections": [
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "houseNumber",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "numberOfAdultGuests",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "numberOfChildGuests",
+                "storageKey": null
+              }
+            ],
+            "storageKey": null
           }
         ],
         "storageKey": null
@@ -185,16 +222,16 @@ return {
     "selections": (v3/*: any*/)
   },
   "params": {
-    "cacheID": "15c65060a76ea9f4b5c3d8c79229c917",
+    "cacheID": "41b4702bdf9b055befeeecb2646a0a9a",
     "id": null,
     "metadata": {},
     "name": "stateMenuPlansQuery",
     "operationKind": "query",
-    "text": "query stateMenuPlansQuery(\n  $startDate: DateTime\n  $endDate: DateTime\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n      }\n    }\n  }\n}\n"
+    "text": "query stateMenuPlansQuery(\n  $startDate: DateTime!\n  $endDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n      }\n      guests {\n        houseNumber\n        numberOfAdultGuests\n        numberOfChildGuests\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "3190fcdc9ea5a6b2c857656948fb4c6f";
+(node as any).hash = "11ebfeb8775948198498151a3b3c4b4e";
 
 export default node;

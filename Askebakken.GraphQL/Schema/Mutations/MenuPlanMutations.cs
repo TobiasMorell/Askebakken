@@ -232,4 +232,54 @@ public class MenuPlanMutations
 
         return existingPlan;
     }
+    
+    [Error<NotFoundError>]
+    [Error<EventIsInThePastError>]
+    [Authorize]
+    public async Task<MenuPlan> UpsertGuests(Guid menuPlanId, string houseNumber, int? numberOfChildGuests, int? numberOfAdultGuests, CancellationToken cancellationToken = default)
+    {
+        if (numberOfChildGuests is < 0)
+        {
+            throw new InvalidInputError(nameof(numberOfChildGuests));
+        }
+
+        if (numberOfAdultGuests is < 0)
+        {
+            throw new InvalidInputError(nameof(numberOfAdultGuests));
+        }
+
+        var menuPlan = await _menuPlanRepository.GetMenuPlanById(menuPlanId, cancellationToken);
+        if (menuPlan is null)
+        {
+            throw new NotFoundError(nameof(MenuPlan), menuPlanId);
+        }
+
+        if (menuPlan.Date.Date < DateTime.Today)
+        {
+            throw new EventIsInThePastError();
+        }
+
+        var existingGuests = menuPlan.Guests.FirstOrDefault(g => g.HouseNumber == houseNumber);
+        if (existingGuests is not null)
+        {
+            existingGuests.NumberOfAdultGuests = numberOfAdultGuests ?? 0;
+            existingGuests.NumberOfChildGuests = numberOfChildGuests ?? 0;
+        }
+        else
+        {
+            var newGuests = new Guest()
+            {
+                HouseNumber = houseNumber,
+                NumberOfAdultGuests = numberOfAdultGuests ?? 0,
+                NumberOfChildGuests = numberOfChildGuests ?? 0,
+            };
+            menuPlan.Guests = menuPlan.Guests.Append(newGuests).ToArray();
+        }
+        
+        // Filter out all guest entries where sum of guests is 0 to clean up data
+        menuPlan.Guests = menuPlan.Guests.Where(g => g.NumberOfAdultGuests + g.NumberOfChildGuests > 0).ToArray();
+        
+        var updated = await _menuPlanRepository.Update(menuPlan, cancellationToken);
+        return updated;
+    }
 }

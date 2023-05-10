@@ -14,3 +14,9 @@ type AttendanceEvent = Readonly<{
   residentId: string;
   attending: boolean;
 }>;
+
+export type Guests = Readonly<{
+  houseNumber: string;
+  numberOfAdultGuests: number;
+  numberOfChildGuests: number;
+}>;

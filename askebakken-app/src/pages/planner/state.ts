@@ -11,7 +11,10 @@ import { graphql } from "relay-runtime";
 import { RelayEnvironment } from "../../RelayEnvironment";
 import { getStartOfPlan, getEndOfPlan } from "./helpers";
 import { stateResidentsQuery$data } from "../../__generated__/stateResidentsQuery.graphql";
-import { stateMenuPlansQuery$data } from "../../__generated__/stateMenuPlansQuery.graphql";
+import {
+  stateMenuPlansQuery$data,
+  stateMenuPlansQuery$variables,
+} from "../../__generated__/stateMenuPlansQuery.graphql";
 import { stateUserAttendanceQuery$data } from "../../__generated__/stateUserAttendanceQuery.graphql";
 import { stateMenuPlanAttendanceChangedSubscription$data } from "../../__generated__/stateMenuPlanAttendanceChangedSubscription.graphql";
 import { groupBy } from "../../utils/array-utils";
@@ -121,11 +124,11 @@ export const residentsState = selector({
   },
 });
 
-export const menuPlanParticipantsState = graphQLSelector({
+export const menuPlanParticipantsState = graphQLSelectorFamily({
   key: "plannerPageState_menuPlanParticipants",
   environment: RelayEnvironment,
   query: graphql`
-    query stateMenuPlansQuery($startDate: DateTime, $endDate: DateTime) {
+    query stateMenuPlansQuery($startDate: DateTime!, $endDate: DateTime!) {
       menuPlan(
         where: {
           and: [{ date: { gte: $startDate } }, { date: { lte: $endDate } }]
@@ -141,18 +144,19 @@ export const menuPlanParticipantsState = graphQLSelector({
           participants {
             id
           }
+          guests {
+            houseNumber
+            numberOfAdultGuests
+            numberOfChildGuests
+          }
         }
       }
     }
   `,
-  variables: ({ get }) => {
-    const startDate = get(startDateState).toDateOnlyISOString();
-    const endDate = get(endDateState).toDateOnlyISOString();
-    return {
-      startDate,
-      endDate,
-    };
-  },
+  variables: (variables: { startDate: Date; endDate: Date }) => ({
+    startDate: variables.startDate.toDateOnlyISOString(),
+    endDate: variables.endDate.toDateOnlyISOString(),
+  }),
   mapResponse: (r: stateMenuPlansQuery$data) => {
     return r.menuPlan?.nodes?.map((n) => ({ ...n, date: new Date(n.date) }));
   },
@@ -185,7 +189,13 @@ export const selectedDaysWithParticipantsState = selector({
   key: "selectedDaysWithParticipants",
   get: ({ get }) => {
     const selectedDays = get(selectedDaysState);
-    const menuPlans = get(menuPlanParticipantsState);
+    const menuPlans = get(
+      menuPlanParticipantsState({
+        startDate: selectedDays[0],
+        endDate: selectedDays[selectedDays.length - 1],
+      })
+    );
+    console.log(menuPlans);
     const attendanceEvents = get(menuPlanAttendanceEventsState);
 
     const attendanceByMenuPlanId = groupBy(

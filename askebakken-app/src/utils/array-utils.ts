@@ -43,3 +43,7 @@ export function enumerate(options: {
     (_, i) => from + i * step
   );
 }
+
+export function sumBy<T>(array: readonly T[], selector: (item: T) => number) {
+  return array.reduce((sum, item) => sum + selector(item), 0);
+}

@@ -18,6 +18,9 @@ export function JoinCookingButton(props: {
   const [selectedResident, setSelectedResident] = useState<string>();
 
   const appDisplayMode = useRecoilValue(appDisplayModeState);
+
+  const joinButtonDisabled = appDisplayMode === "SYSTEM" && !selectedResident;
+
   const [join, loading] = useMutation<joinCookingButtonMutation>(graphql`
     mutation joinCookingButtonMutation($date: DateTime!, $residentId: UUID) {
       signUpForCooking(date: $date, residentId: $residentId) {
@@ -31,7 +34,6 @@ export function JoinCookingButton(props: {
       }
     }
   `);
-
   function signUpForCooking() {
     join({
       variables: {
@@ -55,7 +57,6 @@ export function JoinCookingButton(props: {
           status: "error",
         });
       },
-      updater: (store) => {},
     });
   }
 
@@ -67,7 +68,13 @@ export function JoinCookingButton(props: {
           onChange={setSelectedResident}
         />
       )}
-      <Button onClick={signUpForCooking} isLoading={loading} disabled={loading}>
+      <Button
+        onClick={signUpForCooking}
+        isLoading={loading}
+        isDisabled={joinButtonDisabled || loading}
+        colorScheme="green"
+        variant="outline"
+      >
         Tilmeld dig
       </Button>
     </Stack>

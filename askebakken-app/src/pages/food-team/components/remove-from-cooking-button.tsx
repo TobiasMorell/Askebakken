@@ -67,7 +67,7 @@ export function RemoveFromCookingButton(props: {
       icon={<DeleteIcon />}
       aria-label="Slet fra madholdet"
       onClick={removeSignUp}
-      disabled={loading}
+      isDisabled={loading}
       isLoading={loading}
     />
   );
