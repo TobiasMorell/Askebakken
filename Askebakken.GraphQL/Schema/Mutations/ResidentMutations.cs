@@ -40,7 +40,6 @@ public class ResidentMutations
             FirstName = resident.FirstName,
             LastName = resident.LastName,
             HouseNumber = resident.HouseNumber,
-            WeekPlanIds = new List<Guid>(),
             ParticipatesInIds = new List<Guid>(),
         };
         await collection.InsertOneAsync(actualResident, cancellationToken: cancellationToken);

@@ -15,15 +15,21 @@ import {
   Tfoot,
 } from "@chakra-ui/react";
 import style from "./planner-page.module.css";
-import { useRecoilValue } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { useMemo } from "react";
 import { Recipes } from "./components/recipes";
-import { selectedDaysWithParticipantsState, residentsState } from "./state";
-import { Resident } from "./types";
+import {
+  selectedDaysWithParticipantsState,
+  residentsState,
+  menuPlanParticipantsState,
+  selectedDaysState,
+} from "./state";
+import { Guests, Resident } from "./types";
 import { useAutomaticWeekChange } from "./hooks";
 import { ToggleAttendanceButton } from "../login/components/toggle-attendance-button";
 import { RealTimeParticipantStatus } from "./components/RealTimeParticipantStatus";
-import { groupBy, toDictionary } from "../../utils/array-utils";
+import { groupBy, sumBy, toDictionary } from "../../utils/array-utils";
+import { WeekPlanGuests } from "./components/week-plan-guests";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
@@ -132,8 +138,18 @@ export function PlannerPage() {
                           </Box>
                         </Flex>
                       </Stack>,
-                      <Center>0</Center>,
-                      <Center>0</Center>,
+                      <Center>
+                        {sumBy(
+                          d.plan?.guests ?? [],
+                          (g) => g.numberOfAdultGuests
+                        )}
+                      </Center>,
+                      <Center>
+                        {sumBy(
+                          d.plan?.guests ?? [],
+                          (g) => g.numberOfChildGuests
+                        )}
+                      </Center>,
                     ]}
                   />
                 </Th>
@@ -162,6 +178,7 @@ function PlannerTableHouseEntry(props: {
             props.residents.length > 1 ? style["no-bottom-border"] : undefined
           }
           withGuests
+          houseNumber={props.house}
         />
       </Tr>
       {props.residents.slice(1).map((r, idx) => (
@@ -177,13 +194,21 @@ function PlannerTableHouseEntry(props: {
     </>
   );
 }
-
-function ResidentRowEntries(props: {
+type ResidentRowEntriesProps = {
   resident: Resident;
   entryClassName?: string;
-  withGuests?: boolean;
-}) {
+};
+type ResidentRowEntriesPropsWithGuests = {
+  withGuests: true;
+  houseNumber: string;
+};
+
+function ResidentRowEntries(
+  props: ResidentRowEntriesProps & (ResidentRowEntriesPropsWithGuests | {})
+) {
   const menuPlans = useRecoilValue(selectedDaysWithParticipantsState);
+
+  const guestProps = props as ResidentRowEntriesPropsWithGuests;
 
   return (
     <>
@@ -210,11 +235,29 @@ function ResidentRowEntries(props: {
                   menuPlanId={plan.plan?.id}
                 />
               </Center>,
-              props.withGuests ? (
-                <Input type="number" placeholder="Antal" />
+              guestProps.withGuests ? (
+                <WeekPlanGuests
+                  for="ADULTS"
+                  defaultValue={
+                    plan.plan?.guests.find(
+                      (g) => g.houseNumber === guestProps.houseNumber
+                    )?.numberOfAdultGuests ?? 0
+                  }
+                  menuPlanId={plan.plan?.id}
+                  houseNumber={guestProps.houseNumber}
+                />
               ) : null,
-              props.withGuests ? (
-                <Input type="number" placeholder="Antal" />
+              guestProps.withGuests ? (
+                <WeekPlanGuests
+                  for="CHILDREN"
+                  defaultValue={
+                    plan.plan?.guests.find(
+                      (g) => g.houseNumber === guestProps.houseNumber
+                    )?.numberOfChildGuests ?? 0
+                  }
+                  menuPlanId={plan.plan?.id}
+                  houseNumber={guestProps.houseNumber}
+                />
               ) : null,
             ]}
           />

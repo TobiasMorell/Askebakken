@@ -228,4 +228,144 @@ public class MenuPlanMutationsTests
         _menuPlannerService.Verify(mps => mps.UnattendMenuPlan(menuPlan, chef, It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task UpsertGuests_throws_NotFoundError_on_nonexisting_menu_plan_id()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var houseNumber = "2C";
+        var numberOfAdults = 1;
+
+        // Act
+        await Should.ThrowAsync<NotFoundError>(() =>
+            _mutations.UpsertGuests(menuPlanId, houseNumber, null, numberOfAdults));
+    }
+
+    [Fact]
+    public async Task UpsertGuests_throws_InputValidationError_if_numberOfAdults_is_negative()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var houseNumber = "2C";
+        var numberOfAdults = -1;
+
+        // Act
+        await Should.ThrowAsync<InvalidInputError>(() =>
+            _mutations.UpsertGuests(menuPlanId, houseNumber, null, numberOfAdults));
+    }
+
+    [Fact]
+    public async Task UpsertGuests_throws_InputValidationError_if_numberOfChildren_is_negative()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var houseNumber = "2C";
+        var numberOfAdults = 1;
+        var numberOfChildren = -1;
+
+        // Act
+        await Should.ThrowAsync<InvalidInputError>(() =>
+            _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults));
+    }
+
+    [Fact]
+    public async Task UpsertGuests_throws_EventIsInThePastError_if_the_date_is_before_today()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var menuPlan = GenerateSampleMenuPlan(menuPlanId);
+        menuPlan.Date = DateTime.Today.AddDays(-1);
+        _menuPlanRepository.AddMockData(menuPlan);
+        var houseNumber = "2C";
+        var numberOfAdults = 1;
+
+        // Act
+        await Should.ThrowAsync<EventIsInThePastError>(() =>
+            _mutations.UpsertGuests(menuPlanId, houseNumber, null, numberOfAdults));
+    }
+
+    [Fact]
+    public async Task UpsertGuests_removes_guests_for_house_if_both_children_and_adults_are_null()
+    {
+        // Arrange
+        var houseNumber = "2C";
+        var menuPlanId = Guid.NewGuid();
+        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId, new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        int? numberOfAdults = null;
+        int? numberOfChildren = null;
+
+        // Act
+        var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
+        
+        // Assert
+        result.Id.ShouldBe(menuPlanId);
+        result.Guests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task UpsertGuests_removes_guests_for_house_if_both_children_and_adults_are_0()
+    {
+        // Arrange
+        var houseNumber = "2C";
+        var menuPlanId = Guid.NewGuid();
+        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId, new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        var numberOfAdults = 0;
+        var numberOfChildren = 0;
+
+        // Act
+        var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
+        
+        // Assert
+        result.Id.ShouldBe(menuPlanId);
+        result.Guests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task UpsertGuests_updates_guests_for_house_if_they_already_exist()
+    {
+        // Arrange
+        var houseNumber = "2C";
+        var menuPlanId = Guid.NewGuid();
+        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId, new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        var numberOfAdults = 2;
+        var numberOfChildren = 2;
+
+        // Act
+        var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
+        
+        // Assert
+        result.Id.ShouldBe(menuPlanId);
+        var guest = result.Guests.ShouldHaveSingleItem();
+        guest.HouseNumber.ShouldBe(houseNumber);
+        guest.NumberOfAdultGuests.ShouldBe(numberOfAdults);
+        guest.NumberOfChildGuests.ShouldBe(numberOfChildren);
+    }
+
+    [Fact]
+    public async Task UpsertGuests_adds_guests_for_house_if_they_do_not_exist()
+    {
+        // Arrange
+        var houseNumber = "2C";
+        var menuPlanId = Guid.NewGuid();
+        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId));
+        var numberOfAdults = 2;
+        var numberOfChildren = 0;
+
+        // Act
+        var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
+        
+        // Assert
+        result.Id.ShouldBe(menuPlanId);
+        var guest = result.Guests.ShouldHaveSingleItem();
+        guest.HouseNumber.ShouldBe(houseNumber);
+        guest.NumberOfAdultGuests.ShouldBe(numberOfAdults);
+        guest.NumberOfChildGuests.ShouldBe(numberOfChildren);
+    }
+
+    private static MenuPlan GenerateSampleMenuPlan(Guid id, params Guest[] guests) =>
+        new MenuPlan()
+        {
+            Id = id, Date = DateTime.Today.AddDays(4), Guests = guests,
+        };
 }

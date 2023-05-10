@@ -65,8 +65,9 @@ public class MongoMenuPlanRepository : IMenuPlanRepository
         
         menuPlan.ModifiedAt = DateTime.UtcNow;
 
-        return await _menuPlans.FindOneAndReplaceAsync(mp => mp.Id == menuPlan.Id,
+        await _menuPlans.FindOneAndReplaceAsync(mp => mp.Id == menuPlan.Id,
             menuPlan,
             cancellationToken: cancellationToken);
+        return menuPlan;
     }
 }
