@@ -1,21 +1,18 @@
-import {
-  Outlet,
-  RouterProvider,
-  createBrowserRouter,
-  useNavigate,
-} from "react-router-dom";
+import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { AbsoluteCenter, Box, ChakraProvider, Spinner } from "@chakra-ui/react";
 import { LoginPage } from "./pages/login/login-page";
-import { PlannerPage } from "./pages/planner/planner-page";
 import { Suspense, useEffect } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import "./style.css";
 
 import "./__prototype__/Date";
+import "./__prototype__/Array";
 import { clearAuthToken, getAuthToken } from "./state/token";
 import { RecoilRoot } from "recoil";
 import TopBar from "./components/top-bar";
 import React from "react";
+
+const PlannerPage = React.lazy(() => import("./pages/planner/planner-page"));
 
 const NotFoundPage = React.lazy(
   () => import("./pages/not-found/not-found-page")

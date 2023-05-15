@@ -6,16 +6,29 @@ namespace Askebakken.GraphQL.Schema;
 [BsonIgnoreExtraElements]
 public class MenuPlan : SchemaBase
 {
-    public ICollection<Guid> RecipeIds { get; set; }
-    [BsonIgnore] public ICollection<Recipe> Recipes { get; set; }
+    public ICollection<Guid> RecipeIds { get; set; } = new List<Guid>();
+    /// <summary>
+    /// Only available when using the <see cref="MenuPlanRelationResolver"/> (aka via GraphQL). Will be null server-side.
+    /// </summary>
+    [BsonIgnore] public ICollection<Recipe> Recipes { get; set; } = null!;
 
     public DateTime Date { get; set; }
 
-    public ICollection<Guid> ParticipantIds { get; set; }
-    [BsonIgnore] public ICollection<Resident> Participants { get; set; }
+    public ICollection<Guid> ParticipantIds { get; set; } = new List<Guid>();
+
+    /// <summary>
+    /// Only available when using the <see cref="MenuPlanRelationResolver"/> (aka via GraphQL). Will be null server-side.
+    /// </summary>
+    [BsonIgnore]
+    public ICollection<Resident> Participants { get; set; } = null!;
 
     public ICollection<Guid>? ChefIds { get; set; }
-    [BsonIgnore] public ICollection<Resident> Chefs { get; set; }
+
+    /// <summary>
+    /// Only available when using the <see cref="MenuPlanRelationResolver"/> (aka via GraphQL). Will be null server-side.
+    /// </summary>
+    [BsonIgnore]
+    public ICollection<Resident> Chefs { get; set; } = null!;
 
     public Guest[] Guests { get; set; } = Array.Empty<Guest>();
 }

@@ -248,6 +248,12 @@ public class MenuPlanMutations
             throw new InvalidInputError(nameof(numberOfAdultGuests));
         }
 
+        var houseResidents = await _residentRepository.GetResidentsByHouse(houseNumber, cancellationToken);
+        if (!houseResidents.Any())
+        {
+            throw new InvalidInputError(nameof(houseNumber));
+        }
+
         var menuPlan = await _menuPlanRepository.GetMenuPlanById(menuPlanId, cancellationToken);
         if (menuPlan is null)
         {

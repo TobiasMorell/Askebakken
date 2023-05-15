@@ -37,7 +37,7 @@ public class MenuPlanMutationsTests
         // Arrange
         var date = DateTime.UtcNow.AddDays(-1);
         var chefId = Guid.NewGuid();
-        _residentRepository.AddMockData(new Resident() { Id = chefId, FirstName = "Chef", LastName = "John", });
+        _residentRepository.AddMockData();
 
         // Act and assert
         await Should.ThrowAsync<EventIsInThePastError>(() => _mutations.SignUpForCooking(date, chefId));
@@ -53,7 +53,7 @@ public class MenuPlanMutationsTests
         };
         _menuPlanRepository.AddMockData(menuPlan);
         var chefId = Guid.NewGuid();
-        _residentRepository.AddMockData(new Resident() { Id = chefId, FirstName = "Chef", LastName = "John", });
+        _residentRepository.AddMockData(GenerateSampleResident(chefId));
 
         // Act and assert
         await Should.ThrowAsync<TooManyCooksError>(() => _mutations.SignUpForCooking(menuPlan.Date, chefId));
@@ -64,7 +64,7 @@ public class MenuPlanMutationsTests
     {
         // Arrange
         var date = DateTime.UtcNow.AddDays(5).Date;
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _residentRepository.AddMockData(chef);
 
         // Act
@@ -82,7 +82,7 @@ public class MenuPlanMutationsTests
         // Arrange
         var menuPlan = new MenuPlan() { Id = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(5).Date, };
         _menuPlanRepository.AddMockData(menuPlan);
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _residentRepository.AddMockData(chef);
 
         // Act
@@ -99,7 +99,7 @@ public class MenuPlanMutationsTests
         // Arrange
         var menuPlan = new MenuPlan() { Id = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(5).Date, };
         _menuPlanRepository.AddMockData(menuPlan);
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _residentRepository.AddMockData(chef);
 
         // Act
@@ -129,7 +129,7 @@ public class MenuPlanMutationsTests
         // Arrange
         var date = DateTime.UtcNow.AddDays(-1);
         var chefId = Guid.NewGuid();
-        _residentRepository.AddMockData(new Resident() { Id = chefId, FirstName = "Chef", LastName = "John", });
+        _residentRepository.AddMockData(GenerateSampleResident(chefId));
 
         // Act and assert
         await Should.ThrowAsync<EventIsInThePastError>(() => _mutations.RemoveSignUpForCooking(date, chefId));
@@ -140,7 +140,7 @@ public class MenuPlanMutationsTests
     {
         // Arrange
         var date = DateTime.UtcNow.AddDays(5).Date;
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _residentRepository.AddMockData(chef);
 
         // Act and assert
@@ -153,7 +153,7 @@ public class MenuPlanMutationsTests
         // Arrange
         var menuPlan = new MenuPlan() { Id = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(5).Date, };
         _menuPlanRepository.AddMockData(menuPlan);
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _residentRepository.AddMockData(chef);
 
         // Act
@@ -170,7 +170,7 @@ public class MenuPlanMutationsTests
         // Arrange
         var menuPlan = new MenuPlan() { Id = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(5).Date, };
         _menuPlanRepository.AddMockData(menuPlan);
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _userService.MockAuthenticatedUser(chef);
 
         // Act
@@ -188,7 +188,7 @@ public class MenuPlanMutationsTests
         RemoveSignUpForCooking_removes_the_user_as_chef_but_retains_participation_on_the_MenuPlan_when_RetainParticipation_is_true()
     {
         // Arrange
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _residentRepository.AddMockData(chef);
         var menuPlan = new MenuPlan()
         {
@@ -211,7 +211,7 @@ public class MenuPlanMutationsTests
         RemoveSignUpForCooking_removes_the_user_as_chef_and_participation_on_the_MenuPlan_when_RetainParticipation_is_false()
     {
         // Arrange
-        var chef = new Resident() { Id = Guid.NewGuid(), FirstName = "Chef", LastName = "John", };
+        var chef = GenerateSampleResident(Guid.NewGuid());
         _residentRepository.AddMockData(chef);
         var menuPlan = new MenuPlan()
         {
@@ -236,6 +236,7 @@ public class MenuPlanMutationsTests
         var menuPlanId = Guid.NewGuid();
         var houseNumber = "2C";
         var numberOfAdults = 1;
+        _residentRepository.AddMockData(GenerateSampleResident(Guid.NewGuid(), houseNumber));
 
         // Act
         await Should.ThrowAsync<NotFoundError>(() =>
@@ -279,9 +280,25 @@ public class MenuPlanMutationsTests
         _menuPlanRepository.AddMockData(menuPlan);
         var houseNumber = "2C";
         var numberOfAdults = 1;
+        _residentRepository.AddMockData(GenerateSampleResident(Guid.NewGuid(), houseNumber));
 
         // Act
         await Should.ThrowAsync<EventIsInThePastError>(() =>
+            _mutations.UpsertGuests(menuPlanId, houseNumber, null, numberOfAdults));
+    }
+
+    [Fact]
+    public async Task UpsertGuests_throws_InvalidInputError_if_the_no_residents_live_in_the_given_house()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var menuPlan = GenerateSampleMenuPlan(menuPlanId);
+        _menuPlanRepository.AddMockData(menuPlan);
+        var houseNumber = "2C";
+        var numberOfAdults = 1;
+
+        // Act
+        await Should.ThrowAsync<InvalidInputError>(() =>
             _mutations.UpsertGuests(menuPlanId, houseNumber, null, numberOfAdults));
     }
 
@@ -291,13 +308,15 @@ public class MenuPlanMutationsTests
         // Arrange
         var houseNumber = "2C";
         var menuPlanId = Guid.NewGuid();
-        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId, new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId,
+            new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        _residentRepository.AddMockData(GenerateSampleResident(Guid.NewGuid(), houseNumber));
         int? numberOfAdults = null;
         int? numberOfChildren = null;
 
         // Act
         var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
-        
+
         // Assert
         result.Id.ShouldBe(menuPlanId);
         result.Guests.ShouldBeEmpty();
@@ -309,13 +328,15 @@ public class MenuPlanMutationsTests
         // Arrange
         var houseNumber = "2C";
         var menuPlanId = Guid.NewGuid();
-        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId, new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId,
+            new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        _residentRepository.AddMockData(GenerateSampleResident(Guid.NewGuid(), houseNumber));
         var numberOfAdults = 0;
         var numberOfChildren = 0;
 
         // Act
         var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
-        
+
         // Assert
         result.Id.ShouldBe(menuPlanId);
         result.Guests.ShouldBeEmpty();
@@ -327,13 +348,15 @@ public class MenuPlanMutationsTests
         // Arrange
         var houseNumber = "2C";
         var menuPlanId = Guid.NewGuid();
-        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId, new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId,
+            new Guest() { HouseNumber = houseNumber, NumberOfAdultGuests = 2, }));
+        _residentRepository.AddMockData(GenerateSampleResident(Guid.NewGuid(), houseNumber));
         var numberOfAdults = 2;
         var numberOfChildren = 2;
 
         // Act
         var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
-        
+
         // Assert
         result.Id.ShouldBe(menuPlanId);
         var guest = result.Guests.ShouldHaveSingleItem();
@@ -349,12 +372,13 @@ public class MenuPlanMutationsTests
         var houseNumber = "2C";
         var menuPlanId = Guid.NewGuid();
         _menuPlanRepository.AddMockData(GenerateSampleMenuPlan(menuPlanId));
+        _residentRepository.AddMockData(GenerateSampleResident(Guid.NewGuid(), houseNumber));
         var numberOfAdults = 2;
         var numberOfChildren = 0;
 
         // Act
         var result = await _mutations.UpsertGuests(menuPlanId, houseNumber, numberOfChildren, numberOfAdults);
-        
+
         // Assert
         result.Id.ShouldBe(menuPlanId);
         var guest = result.Guests.ShouldHaveSingleItem();
@@ -363,9 +387,9 @@ public class MenuPlanMutationsTests
         guest.NumberOfChildGuests.ShouldBe(numberOfChildren);
     }
 
+    private static Resident GenerateSampleResident(Guid id, string houseNumber = "") =>
+        new () { Id = id, FirstName = "Chef", LastName = "John", Username = "chefjohn", PasswordHash = "password", HouseNumber = houseNumber};
+
     private static MenuPlan GenerateSampleMenuPlan(Guid id, params Guest[] guests) =>
-        new MenuPlan()
-        {
-            Id = id, Date = DateTime.Today.AddDays(4), Guests = guests,
-        };
+        new MenuPlan() { Id = id, Date = DateTime.Today.AddDays(4), Guests = guests, };
 }

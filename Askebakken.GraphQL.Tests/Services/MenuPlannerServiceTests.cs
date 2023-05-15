@@ -29,11 +29,7 @@ public class MenuPlannerServiceTests
             Date = DateTime.UtcNow.Date,
             ParticipantIds = Array.Empty<Guid>()
         };
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-            ParticipatesInIds = Array.Empty<Guid>(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         // Act
         await _service.AttendMenuPlan(menuPlan, resident);
@@ -54,11 +50,7 @@ public class MenuPlannerServiceTests
             Date = DateTime.UtcNow.Date,
             ParticipantIds = Array.Empty<Guid>()
         };
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-            ParticipatesInIds = Array.Empty<Guid>(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         // Act
         await _service.AttendMenuPlan(menuPlan, resident);
@@ -79,11 +71,7 @@ public class MenuPlannerServiceTests
             Date = DateTime.UtcNow.Date,
             ParticipantIds = Array.Empty<Guid>()
         };
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-            ParticipatesInIds = Array.Empty<Guid>(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         AttendanceChangedEventMessage? sentMessage = null;
         AddMessageTopicCallback<AttendanceChangedEventMessage>(AttendanceChangedEventMessage.Topic, msg => sentMessage = msg);
@@ -102,11 +90,7 @@ public class MenuPlannerServiceTests
     public async Task UnattendMenuPlan_should_remove_participant_from_menu_plan()
     {
         // Arrange
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-            ParticipatesInIds = new List<Guid>(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         var menuPlan = new MenuPlan
         {
@@ -130,11 +114,7 @@ public class MenuPlannerServiceTests
     public async Task UnattendMenuPlan_should_remove_participation_from_resident()
     {
         // Arrange
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-            ParticipatesInIds = new List<Guid>(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         var menuPlan = new MenuPlan
         {
@@ -158,11 +138,7 @@ public class MenuPlannerServiceTests
     public async Task UnattendMenuPlan_should_send_event()
     {
         // Arrange
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-            ParticipatesInIds = new List<Guid>(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         var menuPlan = new MenuPlan
         {
@@ -190,10 +166,7 @@ public class MenuPlannerServiceTests
     public async Task SignUpForCooking_should_add_cook_to_menu_plan()
     {
         // Arrange
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         var menuPlan = new MenuPlan
         {
@@ -214,10 +187,7 @@ public class MenuPlannerServiceTests
     public async Task SignUpForCooking_should_add_menu_plan_to_resident_CooksInIds()
     {
         // Arrange
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         var menuPlan = new MenuPlan
         {
@@ -238,10 +208,7 @@ public class MenuPlannerServiceTests
     public async Task RemoveFromCooking_should_remove_cook_from_menu_plan()
     {
         // Arrange
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         var menuPlan = new MenuPlan
         {
@@ -263,10 +230,7 @@ public class MenuPlannerServiceTests
     public async Task RemoveFromCooking_should_remove_menu_plan_from_resident_CooksInIds()
     {
         // Arrange
-        var resident = new Resident
-        {
-            Id = Guid.NewGuid(),
-        };
+        var resident = GenerateSampleResident(Guid.NewGuid());
         
         var menuPlan = new MenuPlan
         {
@@ -283,6 +247,15 @@ public class MenuPlannerServiceTests
         updatedResident.Id.ShouldBe(resident.Id);
         updatedResident.CooksInIds.ShouldNotBeNull().ShouldNotContain(menuPlan.Id);
     }
+    
+    private static Resident GenerateSampleResident(Guid id, List<Guid>? participatesInIds = null) => new Resident
+    {
+        Id = id,
+        ParticipatesInIds = participatesInIds ?? new(),
+        Username = "testuser",
+        PasswordHash = "testhash",
+        HouseNumber = "1",
+    };
 
     private void AddMessageTopicCallback<TMessage>(string topicName, Action<TMessage> callback)
     {

@@ -20,10 +20,24 @@ public static class GraphQlMongoDbServiceCollectionExtensions
         var database = client.GetDatabase(options.DatabaseName);
 
         var getCollectionMethod = typeof(IMongoDatabase).GetMethod(nameof(database.GetCollection));
+        if (getCollectionMethod is null)
+        {
+            throw new ApplicationException(
+                "Could not find GetCollection method on IMongoDatabase - this should not happen");
+        }
+        
         foreach (var type in SchemaTypes)
         {
             var getCollectionTyped = getCollectionMethod.MakeGenericMethod(type);
-            services.AddSingleton(typeof(IMongoCollection<>).MakeGenericType(type), getCollectionTyped.Invoke(database, new [] { type.Name + "s", null }));
+            var parameters = new object? [] { type.Name + "s", null };
+            var result = getCollectionTyped.Invoke(database, parameters);
+            if (result is null)
+            {
+                throw new ApplicationException(
+                    $"Could not get collection for type {type.Name} - this should not happen");
+            } 
+            
+            services.AddSingleton(typeof(IMongoCollection<>).MakeGenericType(type), result);
         }
 
         return services;

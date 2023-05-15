@@ -1,31 +1,18 @@
-import {
-  atom,
-  atomFamily,
-  noWait,
-  selector,
-  selectorFamily,
-  useRecoilValue,
-} from "recoil";
+import { atom, selector, useRecoilValue } from "recoil";
 import { graphQLSelector, graphQLSelectorFamily } from "recoil-relay";
 import { graphql } from "relay-runtime";
 import { RelayEnvironment } from "../../RelayEnvironment";
 import { getStartOfPlan, getEndOfPlan } from "./helpers";
 import { stateResidentsQuery$data } from "../../__generated__/stateResidentsQuery.graphql";
-import {
-  stateMenuPlansQuery$data,
-  stateMenuPlansQuery$variables,
-} from "../../__generated__/stateMenuPlansQuery.graphql";
+import { stateMenuPlansQuery$data } from "../../__generated__/stateMenuPlansQuery.graphql";
 import { stateUserAttendanceQuery$data } from "../../__generated__/stateUserAttendanceQuery.graphql";
 import { stateMenuPlanAttendanceChangedSubscription$data } from "../../__generated__/stateMenuPlanAttendanceChangedSubscription.graphql";
-import { groupBy } from "../../utils/array-utils";
 import { AttendanceEvent } from "./types";
 import { appDisplayModeState } from "../../app-state/app-display-mode";
 import {
   stateLoggedInUserHouseQuery$data,
   stateLoggedInUserHouseQuery$variables,
 } from "../../__generated__/stateLoggedInUserHouseQuery.graphql";
-import { stateResidentsInHouseQuery$variables } from "../../__generated__/stateResidentsInHouseQuery.graphql";
-import { residentSelectQuery$data } from "../../__generated__/residentSelectQuery.graphql";
 
 export const startDateState = atom({
   key: "startDate",
@@ -198,8 +185,7 @@ export const selectedDaysWithParticipantsState = selector({
     console.log(menuPlans);
     const attendanceEvents = get(menuPlanAttendanceEventsState);
 
-    const attendanceByMenuPlanId = groupBy(
-      attendanceEvents,
+    const attendanceByMenuPlanId = attendanceEvents.groupBy(
       (e) => e.menuPlanId
     );
 
