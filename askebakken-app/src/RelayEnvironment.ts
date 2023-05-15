@@ -10,19 +10,26 @@ import {
 import { createClient } from "graphql-ws";
 import { getAuthToken } from "./state/token";
 
-const HTTP_ENDPOINT = `${window.location.protocol}//${window.location.host}/graphql`;
-const WEBSOCKET_ENDPOINT = HTTP_ENDPOINT.replace("http", "ws");
+const HTTP_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+const WEBSOCKET_ENDPOINT = import.meta.env.VITE_GRAPHQL_WEBSOCKET_ENDPOINT;
+
+console.log({
+  HTTP_ENDPOINT,
+  WEBSOCKET_ENDPOINT,
+});
 
 const fetchFn: FetchFunction = async (request, variables) => {
   const token = getAuthToken();
 
   const resp = await fetch(HTTP_ENDPOINT, {
     method: "POST",
+    mode: "cors",
     headers: {
       Accept:
         "application/graphql-response+json; charset=utf-8, application/json; charset=utf-8",
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      "Access-Control-Allow-Origin": "*",
       // <-- Additional headers like 'Authorization' would go here
     },
     body: JSON.stringify({

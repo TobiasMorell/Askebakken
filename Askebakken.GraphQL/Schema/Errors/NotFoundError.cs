@@ -13,5 +13,6 @@ public class NotFoundError : Exception
 
     private NotFoundError(string message) : base(message)
     {
+        Ids = Array.Empty<Guid>();
     }
 }

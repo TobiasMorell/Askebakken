@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import { LoginWrapper } from "./components/login-wrapper";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useMutation } from "react-relay";
+import { graphql, useMutation } from "react-relay";
 import { useRef, useState } from "react";
 
 const loginMutation = graphql`

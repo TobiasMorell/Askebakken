@@ -1,72 +1,83 @@
-using System.Text;
 using Askebakken.GraphQL.Extensions;
 using Askebakken.GraphQL.Options;
 using Askebakken.GraphQL.Repository.MenuPlan;
 using Askebakken.GraphQL.Repository.Recipe;
 using Askebakken.GraphQL.Repository.Resident;
 using Askebakken.GraphQL.Services;
-using Askebakken.GraphQL.Services.PasswordHasher;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using Askebakken.GraphQL.StartupTasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var mongoOptions = builder.Configuration.GetSection(nameof(MongoDbConnectionOptions)).Get<MongoDbConnectionOptions>();
-if (mongoOptions is null)
+var authOptions = GetRequiredOptions<JwtAuthenticationOptions>(builder.Configuration);
+if (string.IsNullOrEmpty(authOptions.Secret))
 {
-    throw new ApplicationException("MongoDbConnectionOptions is null. Please set them via appsettings");
+    throw new ApplicationException("JwtAuthenticationOptions.Secret is null. Please set them via appsettings");
 }
 
-var authOptions = builder.Configuration.GetSection(nameof(JwtAuthenticationOptions)).Get<JwtAuthenticationOptions>();
-if (authOptions is null)
+builder.Services.AddJwtAuthentication(authOptions);
+
+var corsOptions = GetRequiredOptions<CorsOptions>(builder.Configuration);
+builder.Services.AddCors(cors =>
 {
-    throw new ApplicationException("JwtAuthenticationOptions is null. Please set them via appsettings");
-}
-
-builder.Services.AddSingleton(authOptions);
-var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authOptions.Secret));
-
-builder.Services.AddCors();
-
-builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(nameof(EmailOptions))).AddTransient<IEmailService, EmailService>();
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-    options.IncludeErrorDetails = builder.Environment.IsDevelopment();
-    options.TokenValidationParameters = new()
+    Console.WriteLine("Allowed origins: " + string.Join(", ", corsOptions.AllowedOrigins));
+    if (!corsOptions.AllowedOrigins.Any())
     {
-        ValidIssuer = authOptions.Issuer,
-        ValidateIssuer = true,
-        ValidAudience = authOptions.Audience,
-        ValidateAudience = true,
-        IssuerSigningKey = authSigningKey,
-        ValidateIssuerSigningKey = authOptions.ValidateSigningKey,
-    };
+        cors.AddDefaultPolicy(corsBuilder => { corsBuilder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); });
+    }
+    else
+    {
+        cors.AddDefaultPolicy(
+            corsBuilder =>
+            {
+                corsBuilder.WithOrigins(corsOptions.AllowedOrigins).AllowAnyHeader().AllowAnyMethod()
+                    .AllowCredentials();
+            });
+    }
 });
-builder.Services.AddAuthorization()
-    .AddSingleton<IPasswordHasher, DefaultPasswordHasher>()
-    .AddHttpContextAccessor()
-    .AddTransient<IUserService, UserService>();
 
-builder.Services
-    .AddSingleton<IRecipeRepository, MongoRecipeRepository>()
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(nameof(EmailOptions)))
+    .AddTransient<IEmailService, EmailService>();
+
+var mongoOptions = GetRequiredOptions<MongoDbConnectionOptions>(builder.Configuration);
+builder.Services.AddSingleton<IRecipeRepository, MongoRecipeRepository>()
     .AddSingleton<IResidentRepository, MongoResidentRepository>()
     .AddSingleton<IMenuPlanRepository, MongoMenuPlanRepository>()
-    .AddSingleton<IMenuPlannerService, MenuPlannerService>()
-    .AddMongoDb(mongoOptions)
-    .AddGraphQLServer().AddMongoDbPagingProviders().AddMongoQueryProviders().AddInMemorySubscriptions()
+    .AddSingleton<IMenuPlannerService, MenuPlannerService>().AddMongoDb(mongoOptions);
+
+builder.Services.AddGraphQLServer().AddMongoDbPagingProviders().AddMongoQueryProviders().AddInMemorySubscriptions()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()).AddAuthorization();
+
+try
+{
+    var adminOptions = GetRequiredOptions<AdminUserOptions>(builder.Configuration);
+    builder.Services.AddSingleton(adminOptions).AddStartupTask<SeedAdminUserStartupTask>();
+}
+catch (ApplicationException)
+{
+    // Ignore
+}
 
 var app = builder.Build();
 
-app.UseCors(x => x
-    .AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader());
+app.UseCors();
 
 app.UseWebSockets();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapGraphQL();
 
+await app.Services.ExecuteStartupTasks();
+
 app.Run();
+
+TOptions GetRequiredOptions<TOptions>(IConfiguration configuration)
+{
+    var optionsName = typeof(TOptions).Name;
+    var options = configuration.GetSection(optionsName).Get<TOptions>();
+    if (options is null)
+    {
+        throw new ApplicationException($"{optionsName} is null. Please set them via appsettings");
+    }
+
+    return options;
+}

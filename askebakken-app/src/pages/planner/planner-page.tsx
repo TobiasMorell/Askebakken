@@ -9,33 +9,26 @@ import {
   Box,
   Flex,
   Text,
-  Input,
   Center,
   Stack,
   Tfoot,
 } from "@chakra-ui/react";
 import style from "./planner-page.module.css";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue } from "recoil";
 import { useMemo } from "react";
 import { Recipes } from "./components/recipes";
-import {
-  selectedDaysWithParticipantsState,
-  residentsState,
-  menuPlanParticipantsState,
-  selectedDaysState,
-} from "./state";
-import { Guests, Resident } from "./types";
+import { selectedDaysWithParticipantsState, residentsState } from "./state";
+import { Resident } from "./types";
 import { useAutomaticWeekChange } from "./hooks";
 import { ToggleAttendanceButton } from "../login/components/toggle-attendance-button";
 import { RealTimeParticipantStatus } from "./components/RealTimeParticipantStatus";
-import { groupBy, sumBy, toDictionary } from "../../utils/array-utils";
 import { WeekPlanGuests } from "./components/week-plan-guests";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
 const participantCategories = ["Voksen", "Voksen gæst", "Barn gæst"];
 
-export function PlannerPage() {
+export default function PlannerPage() {
   useAutomaticWeekChange();
   const menuPlans = useRecoilValue(selectedDaysWithParticipantsState);
 
@@ -45,10 +38,10 @@ export function PlannerPage() {
     [residents]
   );
   const residentsByHouse = useMemo(() => {
-    return groupBy(residents ?? [], (r) => r.houseNumber);
+    return residents?.groupBy((r) => r.houseNumber);
   }, [residents]);
   const residentById = useMemo(() => {
-    return toDictionary(residents ?? [], (r) => r.id);
+    return residents?.toDictionary((r) => r.id);
   }, [residents]);
 
   return (
@@ -107,7 +100,7 @@ export function PlannerPage() {
               <PlannerTableHouseEntry
                 key={house}
                 house={house}
-                residents={residentsByHouse.get(house) ?? []}
+                residents={residentsByHouse?.get(house) ?? []}
               />
             ))}
           </Tbody>
@@ -125,7 +118,7 @@ export function PlannerPage() {
                           <Box>Voksne:</Box>
                           <Box>
                             {d.plan?.participants.filter(
-                              (p) => residentById.get(p?.id)?.child
+                              (p) => residentById?.get(p?.id)?.child
                             )?.length ?? 0}
                           </Box>
                         </Flex>
@@ -133,22 +126,18 @@ export function PlannerPage() {
                           <Box>Børn:</Box>
                           <Box>
                             {d.plan?.participants.filter(
-                              (p) => residentById.get(p?.id)?.child
+                              (p) => residentById?.get(p?.id)?.child
                             )?.length ?? 0}
                           </Box>
                         </Flex>
                       </Stack>,
                       <Center>
-                        {sumBy(
-                          d.plan?.guests ?? [],
-                          (g) => g.numberOfAdultGuests
-                        )}
+                        {d.plan?.guests?.sumBy((g) => g.numberOfAdultGuests) ??
+                          0}
                       </Center>,
                       <Center>
-                        {sumBy(
-                          d.plan?.guests ?? [],
-                          (g) => g.numberOfChildGuests
-                        )}
+                        {d.plan?.guests?.sumBy((g) => g.numberOfChildGuests) ??
+                          0}
                       </Center>,
                     ]}
                   />

@@ -5,9 +5,15 @@ namespace Askebakken.GraphQL.Schema.Inputs;
 public class CreateResidentInput
 {
     [EmailAddress]
-    public string Username { get; set; }
-    public string Password { get; set; }
+    [Required]
+    [MaxLength(100)]
+    public required string Username { get; set; }
+    [MaxLength(50)]
     public string? FirstName { get; set; }
+    [MaxLength(50)]
     public string? LastName { get; set; }
-    public string HouseNumber { get; set; }
+    [Required]
+    [MinLength(1)]
+    [MaxLength(6)]
+    public required string HouseNumber { get; set; }
 }

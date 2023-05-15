@@ -18,7 +18,6 @@ import {
   HStack,
   Flex,
 } from "@chakra-ui/react";
-import { enumerate } from "../../utils/array-utils";
 import { getWeekDates } from "../../utils/date-utils";
 import { useMemo, useState } from "react";
 import { useRecoilStateLoadable } from "recoil";
@@ -51,7 +50,7 @@ export default function FoodTeamPage() {
     <Box padding={8}>
       <Stack spacing="8">
         <Grid templateColumns="repeat(2, 1fr)" gap={8}>
-          {enumerate({
+          {Array.enumerate({
             from: selectedStartingWeek,
             to: selectedStartingWeek + NUMBER_OF_WEEKS_IN_GRID,
           }).map((week) => (

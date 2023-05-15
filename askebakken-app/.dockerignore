@@ -1,0 +1,15 @@
+# Anything not used by the build system should go here.
+
+.dockerfile
+.dockerignore
+.gitignore
+README.md
+
+# Artifacts that will be built during image creation.
+
+yarn-error.log
+yarn.lock
+
+build
+node_modules
+.vite/

@@ -1,8 +1,10 @@
-interface Date {
-  getWeek(): number;
-  getDayOfYear(): number;
-  toDateOnlyISOString(): string;
-  getDanishWeekday(): string;
+declare global {
+  interface Date {
+    getWeek(): number;
+    getDayOfYear(): number;
+    toDateOnlyISOString(): string;
+    getDanishWeekday(): string;
+  }
 }
 
 // Returns the ISO week of the date.
@@ -54,3 +56,5 @@ const weekdays = [
 Date.prototype.getDanishWeekday = function () {
   return weekdays[this.getDay()];
 };
+
+export {};

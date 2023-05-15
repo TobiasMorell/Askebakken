@@ -48,7 +48,6 @@ import {
   useRecoilValueLoadable,
 } from "recoil";
 import { graphql, useMutation } from "react-relay";
-import { enumerate, toDictionary } from "../../utils/array-utils";
 import { Recipe } from "../planner/types";
 import {
   CreateRecipeInput,
@@ -146,7 +145,7 @@ export default function CreateMenuPlanPage() {
             onChange={(v) => setWeek(Number.parseInt(v.target.value))}
             width="200px"
           >
-            {enumerate({ to: 52 }).map((i) => (
+            {Array.enumerate({ to: 52 }).map((i) => (
               <option key={i} value={i}>
                 {i}
               </option>
@@ -159,7 +158,7 @@ export default function CreateMenuPlanPage() {
             onChange={(v) => setYear(Number.parseInt(v.target.value))}
             width="200px"
           >
-            {enumerate({ to: 10 }).map((i) => (
+            {Array.enumerate({ to: 10 }).map((i) => (
               <option key={i} value={i}>
                 {i}
               </option>
@@ -390,7 +389,7 @@ function DayPlan(props: {
   onChange: (plan: MenuPlanWithOptionalId) => void;
 }) {
   const recipeByCategory = useMemo(() => {
-    return toDictionary(props.menuPlan?.recipes ?? [], (r) => r.category);
+    return props.menuPlan?.recipes?.toDictionary((r) => r.category);
   }, [props.menuPlan?.recipes]);
 
   const [recipes, setRecipes] = useState(recipeByCategory);
@@ -399,7 +398,7 @@ function DayPlan(props: {
     props.onChange({
       id: props.menuPlan?.id,
       date: props.date,
-      recipes: Array.from(recipes.values()),
+      recipes: Array.from(recipes?.values() ?? []),
     });
   }, [recipes, props.date, props.menuPlan?.id, props.onChange]);
 
@@ -427,7 +426,7 @@ function DayPlan(props: {
         {["main", "veggies", "side", "sauce"].map((cat) => (
           <Td key={cat}>
             <Input
-              value={recipes.get(cat)?.name ?? ""}
+              value={recipes?.get(cat)?.name ?? ""}
               onChange={addOrUpdateRecipe(cat)}
             />
           </Td>
@@ -439,7 +438,7 @@ function DayPlan(props: {
           <Td>Dessert</Td>
           <Td>
             <Input
-              value={recipes.get("dessert")?.name ?? ""}
+              value={recipes?.get("dessert")?.name ?? ""}
               onChange={addOrUpdateRecipe("dessert")}
             />
           </Td>
