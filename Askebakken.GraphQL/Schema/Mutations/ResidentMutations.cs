@@ -164,33 +164,40 @@ public class ResidentMutations
 
     private string GetResidentWelcomeEmailTemplate(Resident resident, string password, Resident creator) => $"""
 {EmailHeader(resident)}
+<table border=0 cellspacing="0" cellpadding="0" style="background-color: white">
+    <tr>
+        <td>
+            <p>Velkommen til Askebakkens beboerportal. Du er blevet oprettet som bruger af {creator.FirstName}.</p>
 
-<p>Velkommen til Askebakkens beboerportal. Du er blevet oprettet som bruger af {creator.FirstName}.</p>
+            <p>Du kan logge ind med følgende oplysninger<br />Brugernavn: {resident.Username}<br/>Kodeord: <strong>{password}</strong></p>
+            <p><i>Vi anbefaler at du skifter dit kodeord, når du har logget ind.</i></p>
 
-<p>Du kan logge ind med følgende oplysninger<br />Brugernavn: {resident.Username}<br/>Kodeord: <strong>{password}</strong></p>
-<p><i>Vi anbefaler at du skifter dit kodeord, når du har logget ind.</i></p>
+            <br />
+            <a href="https://beboer.askebakken.dk" style="padding: 16px;color: white;background-color: #38A169;border-radius: 8px;">Åben Askebakkens beboerportal</a>
+            <br />
 
-<a href="https://beboer.askebakken.dk" style="padding: 16px;color: white;background-color: #38A169;border-radius: 8px;">Åben Askebakkens beboerportal</a>
+            <p>På Askebakkens beboerportal kan du:</p>
+            <ul>
+                <li>Oprette madplaner</li>
+                <li>Tilmelde dig til spisning</li>
+                <li>Se hvem der er tilmeldt til spisning</li>
+                <li>Tilmelde dig til madlavning</li>
+            </ul>
 
-<p>På Askebakkens beboerportal kan du:</p>
-<ul>
-    <li>Oprette madplaner</li>
-    <li>Tilmelde dig til spisning</li>
-    <li>Se hvem der er tilmeldt til spisning</li>
-    <li>Tilmelde dig til madlavning</li>
-</ul>
+            <p>På sigt er det planen at Askebakkens beboerportal automatisk skal kunne:</p>
+            <ul>
+                <li>Udregne det månedlige madbudget pr. beboer</li>
+                <li>Lave optælling af madlavning</li>
+                <li>Planlægge hvem der laver madplan</li>
+                <li>Samt meget andet, hvis der er interesse for det</li>
+            </ul>
 
-<p>På sigt er det planen at Askebakkens beboerportal automatisk skal kunne:</p>
-<ul>
-    <li>Udregne det månedlige madbudget pr. beboer</li>
-    <li>Lave optælling af madlavning</li>
-    <li>Planlægge hvem der laver madplan</li>
-    <li>Samt meget andet, hvis der er interesse for det</li>
-</ul>
+            <p>Vi håber at du vil tage godt imod Askebakkens beboerportal.</p>
 
-<p>Vi håber at du vil tage godt imod Askebakkens beboerportal.</p>
-
-<p>Med venlig hilsen<br>Tobias Morell</p>
+            <p>Med venlig hilsen<br>Tobias Morell</p>
+        </td>
+    </tr>
+</table>
 """;
     
     private static string EmailHeader(Resident resident) => $"""
@@ -199,7 +206,7 @@ public class ResidentMutations
         <td align="center">
             <img src="https://askebakken.dk/wp-content/uploads/2021/03/asketrae.png" style="height: 64px; width: auto; padding-left: 16px;" />
         </td>
-        <td>
+        <td style="padding-left: 8px">
             <strong>Hej {resident.FirstName} {resident.LastName}</strong>
         </td>
     </tr>

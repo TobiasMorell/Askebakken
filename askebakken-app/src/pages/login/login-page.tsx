@@ -15,6 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { graphql, useMutation } from "react-relay/hooks";
 import { loginPageAuthenticateMutation } from "../../__generated__/loginPageAuthenticateMutation.graphql";
 import { getAuthToken, setAuthToken } from "../../state/token";
+import { PasswordInput } from "../../components/password-input";
 
 const loginMutation = graphql`
   mutation loginPageAuthenticateMutation(
@@ -38,7 +39,6 @@ export function LoginPage(props: {}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<"email" | "password">();
-  const [showPassword, setShowPassword] = useState(false);
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -107,28 +107,13 @@ export function LoginPage(props: {}) {
         <FormControl id="password">
           <FormLabel>Kodeord</FormLabel>
 
-          <InputGroup size="md">
-            <Input
-              type={showPassword ? "text" : "password"}
-              ref={passwordRef}
-              onChange={(v) => setPassword(v.target.value)}
-              value={password}
-              placeholder="Kodeord"
-              pr="4.5rem"
-              errorBorderColor="red.300"
-              isInvalid={error === "password"}
-              onKeyUp={loginOnEnter}
-            />
-            <InputRightElement width="4.5rem">
-              <Button
-                h="1.75rem"
-                size="sm"
-                onClick={() => setShowPassword((s) => !s)}
-              >
-                {showPassword ? "Skjul" : "Vis"}
-              </Button>
-            </InputRightElement>
-          </InputGroup>
+          <PasswordInput
+            value={password}
+            onChange={(v) => setPassword(v.target.value)}
+            ref={passwordRef}
+            onKeyUp={loginOnEnter}
+            isInvalid={error === "password"}
+          />
         </FormControl>
         <Stack spacing={10}>
           <Stack
