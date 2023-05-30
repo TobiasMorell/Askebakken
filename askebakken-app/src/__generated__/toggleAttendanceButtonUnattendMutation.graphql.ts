@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<3068327a5ba00b684a2f7879de0c0001>>
+ * @generated SignedSource<<238988cd50869854b9a36051d20b4eb1>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -18,6 +18,7 @@ export type toggleAttendanceButtonUnattendMutation$data = {
     readonly id: any;
     readonly participants: ReadonlyArray<{
       readonly firstName: string | null;
+      readonly id: any;
       readonly lastName: string | null;
     }>;
   };
@@ -40,7 +41,14 @@ var v0 = [
     "name": "userId"
   }
 ],
-v1 = [
+v1 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+},
+v2 = [
   {
     "alias": null,
     "args": [
@@ -66,13 +74,7 @@ v1 = [
     "name": "unattend",
     "plural": false,
     "selections": [
-      {
-        "alias": null,
-        "args": null,
-        "kind": "ScalarField",
-        "name": "id",
-        "storageKey": null
-      },
+      (v1/*: any*/),
       {
         "alias": null,
         "args": null,
@@ -81,6 +83,7 @@ v1 = [
         "name": "participants",
         "plural": true,
         "selections": [
+          (v1/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -108,7 +111,7 @@ return {
     "kind": "Fragment",
     "metadata": null,
     "name": "toggleAttendanceButtonUnattendMutation",
-    "selections": (v1/*: any*/),
+    "selections": (v2/*: any*/),
     "type": "Mutation",
     "abstractKey": null
   },
@@ -117,19 +120,19 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
     "name": "toggleAttendanceButtonUnattendMutation",
-    "selections": (v1/*: any*/)
+    "selections": (v2/*: any*/)
   },
   "params": {
-    "cacheID": "58e6d147d36d96434cb50e8b64b42904",
+    "cacheID": "155d12b8daf508a8de7e3b8ec4925ddb",
     "id": null,
     "metadata": {},
     "name": "toggleAttendanceButtonUnattendMutation",
     "operationKind": "mutation",
-    "text": "mutation toggleAttendanceButtonUnattendMutation(\n  $menuPlanId: UUID!\n  $userId: UUID\n) {\n  unattend(input: {menuPlanId: $menuPlanId, residentId: $userId}) {\n    id\n    participants {\n      firstName\n      lastName\n    }\n  }\n}\n"
+    "text": "mutation toggleAttendanceButtonUnattendMutation(\n  $menuPlanId: UUID!\n  $userId: UUID\n) {\n  unattend(input: {menuPlanId: $menuPlanId, residentId: $userId}) {\n    id\n    participants {\n      id\n      firstName\n      lastName\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "872989a1704b4cc2ae7a86a67fe2283d";
+(node as any).hash = "fd2653633af33a57c838eaf767b0e6e7";
 
 export default node;

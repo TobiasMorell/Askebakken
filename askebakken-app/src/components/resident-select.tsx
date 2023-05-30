@@ -13,11 +13,9 @@ import { useRecoilValue } from "recoil";
 const residentsQuery = graphql`
   query residentSelectQuery {
     residents {
-      nodes {
-        id
-        firstName
-        lastName
-      }
+      id
+      firstName
+      lastName
     }
   }
 `;
@@ -31,7 +29,7 @@ const residentsState = graphQLSelector<
   query: residentsQuery,
   variables: () => ({}),
   mapResponse: (data: residentSelectQuery$data) => {
-    return data.residents?.nodes ?? [];
+    return data.residents ?? [];
   },
 });
 

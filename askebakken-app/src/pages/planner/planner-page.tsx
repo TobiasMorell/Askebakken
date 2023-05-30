@@ -17,12 +17,16 @@ import style from "./planner-page.module.css";
 import { useRecoilValue } from "recoil";
 import { useMemo } from "react";
 import { Recipes } from "./components/recipes";
-import { selectedDaysWithParticipantsState, residentsState } from "./state";
 import { Resident } from "./types";
 import { useAutomaticWeekChange } from "./hooks";
 import { ToggleAttendanceButton } from "../login/components/toggle-attendance-button";
-import { RealTimeParticipantStatus } from "./components/RealTimeParticipantStatus";
 import { WeekPlanGuests } from "./components/week-plan-guests";
+import {
+  endDateState,
+  menuPlanParticipantsState,
+  residentsState,
+  startDateState,
+} from "./state";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
@@ -30,7 +34,15 @@ const participantCategories = ["Voksen", "Voksen gæst", "Barn gæst"];
 
 export default function PlannerPage() {
   useAutomaticWeekChange();
-  const menuPlans = useRecoilValue(selectedDaysWithParticipantsState);
+  const selectedStartDate = useRecoilValue(startDateState);
+  const selectedEndDate = useRecoilValue(endDateState);
+  const menuPlans =
+    useRecoilValue(
+      menuPlanParticipantsState({
+        startDate: selectedStartDate,
+        endDate: selectedEndDate,
+      })
+    ) ?? [];
 
   const residents = useRecoilValue(residentsState);
   const houses = useMemo(
@@ -46,7 +58,6 @@ export default function PlannerPage() {
 
   return (
     <>
-      <RealTimeParticipantStatus />
       <TableContainer margin={4}>
         <Table className={style.plannerTable} size="sm">
           <Thead>
@@ -75,8 +86,8 @@ export default function PlannerPage() {
               {menuPlans.map((d) => (
                 <Td key={`menu-${d.date.getDayOfYear()}`}>
                   <Center>
-                    {d.plan?.recipes ? (
-                      <Recipes recipes={d.plan.recipes} />
+                    {d?.recipes ? (
+                      <Recipes recipes={d.recipes} />
                     ) : (
                       <Text fontStyle="italic">Intet planlagt</Text>
                     )}
@@ -117,27 +128,25 @@ export default function PlannerPage() {
                         <Flex justify="space-between">
                           <Box>Voksne:</Box>
                           <Box>
-                            {d.plan?.participants.filter(
-                              (p) => residentById?.get(p?.id)?.child
+                            {d?.participants.filter(
+                              (p) => !residentById?.get(p?.id)?.child
                             )?.length ?? 0}
                           </Box>
                         </Flex>
                         <Flex justify="space-between">
                           <Box>Børn:</Box>
                           <Box>
-                            {d.plan?.participants.filter(
+                            {d?.participants.filter(
                               (p) => residentById?.get(p?.id)?.child
                             )?.length ?? 0}
                           </Box>
                         </Flex>
                       </Stack>,
                       <Center>
-                        {d.plan?.guests?.sumBy((g) => g.numberOfAdultGuests) ??
-                          0}
+                        {d?.guests?.sumBy((g) => g.numberOfAdultGuests) ?? 0}
                       </Center>,
                       <Center>
-                        {d.plan?.guests?.sumBy((g) => g.numberOfChildGuests) ??
-                          0}
+                        {d?.guests?.sumBy((g) => g.numberOfChildGuests) ?? 0}
                       </Center>,
                     ]}
                   />
@@ -195,7 +204,15 @@ type ResidentRowEntriesPropsWithGuests = {
 function ResidentRowEntries(
   props: ResidentRowEntriesProps & (ResidentRowEntriesPropsWithGuests | {})
 ) {
-  const menuPlans = useRecoilValue(selectedDaysWithParticipantsState);
+  const selectedStartDate = useRecoilValue(startDateState);
+  const selectedEndDate = useRecoilValue(endDateState);
+  const menuPlans =
+    useRecoilValue(
+      menuPlanParticipantsState({
+        startDate: selectedStartDate,
+        endDate: selectedEndDate,
+      })
+    ) ?? [];
 
   const guestProps = props as ResidentRowEntriesPropsWithGuests;
 
@@ -215,24 +232,24 @@ function ResidentRowEntries(
               <Center>
                 <ToggleAttendanceButton
                   participantIds={
-                    plan.plan?.participants
+                    plan?.participants
                       .map((p) => p?.id)
                       .filter((p) => !!p)
                       .map((p) => p!) ?? []
                   }
                   userId={props.resident.id}
-                  menuPlanId={plan.plan?.id}
+                  menuPlanId={plan?.id}
                 />
               </Center>,
               guestProps.withGuests ? (
                 <WeekPlanGuests
                   for="ADULTS"
                   defaultValue={
-                    plan.plan?.guests.find(
+                    plan?.guests.find(
                       (g) => g.houseNumber === guestProps.houseNumber
                     )?.numberOfAdultGuests ?? 0
                   }
-                  menuPlanId={plan.plan?.id}
+                  menuPlanId={plan?.id}
                   houseNumber={guestProps.houseNumber}
                 />
               ) : null,
@@ -240,11 +257,11 @@ function ResidentRowEntries(
                 <WeekPlanGuests
                   for="CHILDREN"
                   defaultValue={
-                    plan.plan?.guests.find(
+                    plan?.guests.find(
                       (g) => g.houseNumber === guestProps.houseNumber
                     )?.numberOfChildGuests ?? 0
                   }
-                  menuPlanId={plan.plan?.id}
+                  menuPlanId={plan?.id}
                   houseNumber={guestProps.houseNumber}
                 />
               ) : null,

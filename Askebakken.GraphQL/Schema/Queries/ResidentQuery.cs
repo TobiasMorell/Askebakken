@@ -21,7 +21,6 @@ public class ResidentQuery
     }
     
     [Authorize]
-    [UsePaging]
     [UseProjection]
     [UseFiltering]
     [UseSorting]

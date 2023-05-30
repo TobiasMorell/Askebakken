@@ -85,28 +85,9 @@ type Query {
   recipeById(id: UUID!): Recipe
   me: Resident!
   residents(
-    """
-    Returns the first _n_ elements from the list.
-    """
-    first: Int
-
-    """
-    Returns the elements in the list that come after the specified cursor.
-    """
-    after: String
-
-    """
-    Returns the last _n_ elements from the list.
-    """
-    last: Int
-
-    """
-    Returns the elements in the list that come before the specified cursor.
-    """
-    before: String
     where: ResidentFilterInput
     order: [ResidentSortInput!]
-  ): ResidentsConnection
+  ): [Resident!]!
   residentById(id: UUID!): Resident
 }
 
@@ -277,26 +258,6 @@ input ResidentSortInput {
   id: SortEnumType
   createdAt: SortEnumType
   modifiedAt: SortEnumType
-}
-
-"""
-A connection to a list of items.
-"""
-type ResidentsConnection {
-  """
-  Information to aid in pagination.
-  """
-  pageInfo: PageInfo!
-
-  """
-  A list of edges.
-  """
-  edges: [ResidentsEdge!]
-
-  """
-  A flattened list of the nodes.
-  """
-  nodes: [Resident!]
 }
 
 type NotFoundError {
@@ -472,21 +433,6 @@ input ListFilterInputTypeOfMenuPlanFilterInput {
   any: Boolean
 }
 
-"""
-An edge in a connection.
-"""
-type ResidentsEdge {
-  """
-  A cursor for use in pagination.
-  """
-  cursor: String!
-
-  """
-  The item at the end of the edge.
-  """
-  node: Resident!
-}
-
 input GuestFilterInput {
   and: [GuestFilterInput!]
   or: [GuestFilterInput!]
@@ -529,7 +475,6 @@ type AuthenticateResult {
 
 input CreateResidentInput {
   username: String!
-  password: String!
   firstName: String
   lastName: String
   houseNumber: String!

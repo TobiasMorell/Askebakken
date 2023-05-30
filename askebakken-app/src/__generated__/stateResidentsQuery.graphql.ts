@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<8f45bd1506bb5d14d818919f4fb2ee9f>>
+ * @generated SignedSource<<5b6536438b094ac0a235215a780b2a31>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,15 +11,13 @@
 import { ConcreteRequest, Query } from 'relay-runtime';
 export type stateResidentsQuery$variables = {};
 export type stateResidentsQuery$data = {
-  readonly residents: {
-    readonly nodes: ReadonlyArray<{
-      readonly child: boolean;
-      readonly firstName: string | null;
-      readonly houseNumber: string;
-      readonly id: any;
-      readonly lastName: string | null;
-    }> | null;
-  } | null;
+  readonly residents: ReadonlyArray<{
+    readonly child: boolean;
+    readonly firstName: string | null;
+    readonly houseNumber: string;
+    readonly id: any;
+    readonly lastName: string | null;
+  }>;
 };
 export type stateResidentsQuery = {
   response: stateResidentsQuery$data;
@@ -31,55 +29,44 @@ var v0 = [
   {
     "alias": null,
     "args": null,
-    "concreteType": "ResidentsConnection",
+    "concreteType": "Resident",
     "kind": "LinkedField",
     "name": "residents",
-    "plural": false,
+    "plural": true,
     "selections": [
       {
         "alias": null,
         "args": null,
-        "concreteType": "Resident",
-        "kind": "LinkedField",
-        "name": "nodes",
-        "plural": true,
-        "selections": [
-          {
-            "alias": null,
-            "args": null,
-            "kind": "ScalarField",
-            "name": "id",
-            "storageKey": null
-          },
-          {
-            "alias": null,
-            "args": null,
-            "kind": "ScalarField",
-            "name": "firstName",
-            "storageKey": null
-          },
-          {
-            "alias": null,
-            "args": null,
-            "kind": "ScalarField",
-            "name": "lastName",
-            "storageKey": null
-          },
-          {
-            "alias": null,
-            "args": null,
-            "kind": "ScalarField",
-            "name": "houseNumber",
-            "storageKey": null
-          },
-          {
-            "alias": null,
-            "args": null,
-            "kind": "ScalarField",
-            "name": "child",
-            "storageKey": null
-          }
-        ],
+        "kind": "ScalarField",
+        "name": "id",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "firstName",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "lastName",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "houseNumber",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "child",
         "storageKey": null
       }
     ],
@@ -104,16 +91,16 @@ return {
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "2338ed89d0e75151141f545a927f4ee6",
+    "cacheID": "1b20acdbce41ebd4b342b63e34104d46",
     "id": null,
     "metadata": {},
     "name": "stateResidentsQuery",
     "operationKind": "query",
-    "text": "query stateResidentsQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
+    "text": "query stateResidentsQuery {\n  residents {\n    id\n    firstName\n    lastName\n    houseNumber\n    child\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "a820b200d7dfba70e9b0278bb963b4fb";
+(node as any).hash = "426d86ca8ab9db94b96fddab0068012a";
 
 export default node;

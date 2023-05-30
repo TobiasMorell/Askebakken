@@ -1,9 +1,7 @@
 import { CheckIcon } from "@chakra-ui/icons";
 import { IconButton, useToast } from "@chakra-ui/react";
 import { useMutation } from "react-relay/hooks";
-import { useRecoilStateLoadable } from "recoil";
 import { graphql } from "relay-runtime";
-import { userAttendanceState } from "../../planner/state";
 
 const attendMutation = graphql`
   mutation toggleAttendanceButtonAttendMutation(
@@ -13,6 +11,7 @@ const attendMutation = graphql`
     attend(input: { menuPlanId: $menuPlanId, residentId: $userId }) {
       id
       participants {
+        id
         firstName
         lastName
       }
@@ -28,6 +27,7 @@ const unattendMutation = graphql`
     unattend(input: { menuPlanId: $menuPlanId, residentId: $userId }) {
       id
       participants {
+        id
         firstName
         lastName
       }
@@ -42,15 +42,10 @@ export function ToggleAttendanceButton(props: {
 }) {
   const toast = useToast();
 
-  const [userAttendance, setUserAttendance] = useRecoilStateLoadable(
-    userAttendanceState(props.userId)
-  );
-
   const [attend, attendLoading] = useMutation(attendMutation);
   const [unattend, unattendLoading] = useMutation(unattendMutation);
 
-  const loading =
-    attendLoading || unattendLoading || userAttendance.state === "loading";
+  const loading = attendLoading || unattendLoading;
 
   const attendsPlan = props.participantIds.includes(props.userId);
 
@@ -75,12 +70,6 @@ export function ToggleAttendanceButton(props: {
             title: "Du er nu frameldt",
             status: "info",
           });
-          setUserAttendance((prev) => ({
-            ...prev!,
-            participatesInIds: prev!.participatesInIds.filter(
-              (id) => id !== props.menuPlanId
-            ),
-          }));
         },
         onError: (error) => {
           console.error(error);
@@ -102,10 +91,6 @@ export function ToggleAttendanceButton(props: {
             title: "Du er nu tilmeldt",
             status: "info",
           });
-          setUserAttendance((prev) => ({
-            ...prev!,
-            participatesInIds: [...prev!.participatesInIds, props.menuPlanId!],
-          }));
         },
         onError: (error) => {
           console.error(error);

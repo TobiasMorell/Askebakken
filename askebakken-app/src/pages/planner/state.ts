@@ -5,9 +5,6 @@ import { RelayEnvironment } from "../../RelayEnvironment";
 import { getStartOfPlan, getEndOfPlan } from "./helpers";
 import { stateResidentsQuery$data } from "../../__generated__/stateResidentsQuery.graphql";
 import { stateMenuPlansQuery$data } from "../../__generated__/stateMenuPlansQuery.graphql";
-import { stateUserAttendanceQuery$data } from "../../__generated__/stateUserAttendanceQuery.graphql";
-import { stateMenuPlanAttendanceChangedSubscription$data } from "../../__generated__/stateMenuPlanAttendanceChangedSubscription.graphql";
-import { AttendanceEvent } from "./types";
 import { appDisplayModeState } from "../../app-state/app-display-mode";
 import {
   stateLoggedInUserHouseQuery$data,
@@ -47,18 +44,16 @@ const allResidents = graphQLSelector({
   query: graphql`
     query stateResidentsQuery {
       residents {
-        nodes {
-          id
-          firstName
-          lastName
-          houseNumber
-          child
-        }
+        id
+        firstName
+        lastName
+        houseNumber
+        child
       }
     }
   `,
   variables: {},
-  mapResponse: (r: stateResidentsQuery$data) => r.residents?.nodes,
+  mapResponse: (r: stateResidentsQuery$data) => r.residents,
 });
 
 const loggedInUserHouse = graphQLSelector<
@@ -84,18 +79,16 @@ const residentsInHouse = graphQLSelectorFamily({
   query: graphql`
     query stateResidentsInHouseQuery($houseNumber: String) {
       residents(where: { houseNumber: { eq: $houseNumber } }) {
-        nodes {
-          id
-          firstName
-          lastName
-          houseNumber
-          child
-        }
+        id
+        firstName
+        lastName
+        houseNumber
+        child
       }
     }
   `,
   variables: (houseNumber) => houseNumber,
-  mapResponse: (r: stateResidentsQuery$data) => r.residents?.nodes,
+  mapResponse: (r: stateResidentsQuery$data) => r.residents,
 });
 
 export const residentsState = selector({
@@ -147,103 +140,4 @@ export const menuPlanParticipantsState = graphQLSelectorFamily({
   mapResponse: (r: stateMenuPlansQuery$data) => {
     return r.menuPlan?.nodes?.map((n) => ({ ...n, date: new Date(n.date) }));
   },
-});
-
-export const menuPlanAttendanceEvents = graphQLSelector({
-  key: "menuPlanAttendanceEvents",
-  environment: RelayEnvironment,
-  query: graphql`
-    subscription stateMenuPlanAttendanceChangedSubscription {
-      menuPlanAttendanceChanged {
-        menuPlanId
-        residentId
-        attending
-      }
-    }
-  `,
-  variables: () => ({}),
-  mapResponse: (
-    r: stateMenuPlanAttendanceChangedSubscription$data
-  ): AttendanceEvent => r.menuPlanAttendanceChanged,
-});
-
-export const menuPlanAttendanceEventsState = atom<AttendanceEvent[]>({
-  key: "menuPlanAttendanceEventsState",
-  default: [],
-});
-
-export const selectedDaysWithParticipantsState = selector({
-  key: "selectedDaysWithParticipants",
-  get: ({ get }) => {
-    const selectedDays = get(selectedDaysState);
-    const menuPlans = get(
-      menuPlanParticipantsState({
-        startDate: selectedDays[0],
-        endDate: selectedDays[selectedDays.length - 1],
-      })
-    );
-    console.log(menuPlans);
-    const attendanceEvents = get(menuPlanAttendanceEventsState);
-
-    const attendanceByMenuPlanId = attendanceEvents.groupBy(
-      (e) => e.menuPlanId
-    );
-
-    return selectedDays.map((d) => {
-      const plan = menuPlans?.find(
-        (p) => p.date.getDayOfYear() === d.getDayOfYear()
-      );
-      const attendanceEventsForPlan =
-        attendanceByMenuPlanId.get(plan?.id) ?? [];
-
-      const allParticipants = [
-        ...new Set(
-          attendanceEventsForPlan
-            .map((e) => e.residentId)
-            .concat(plan?.participants?.map((p) => p.id) ?? [])
-        ),
-      ];
-
-      return {
-        date: d,
-        dateName: d.getDanishWeekday(),
-        plan: plan
-          ? {
-              ...plan,
-              participants: allParticipants
-                .map((id) => {
-                  const event = attendanceEventsForPlan.find(
-                    (e) => e.residentId === id
-                  );
-                  if (event != null && !event.attending) {
-                    return null;
-                  }
-
-                  return {
-                    id,
-                  };
-                })
-                .filter((p) => p != null),
-            }
-          : null,
-      };
-    });
-  },
-});
-
-export const userAttendanceState = graphQLSelectorFamily({
-  key: "userAttendance",
-  environment: RelayEnvironment,
-  query: graphql`
-    query stateUserAttendanceQuery($userId: UUID!) {
-      residents(where: { id: { eq: $userId } }) {
-        nodes {
-          id
-          participatesInIds
-        }
-      }
-    }
-  `,
-  variables: (userId: string) => ({ userId }),
-  mapResponse: (r: stateUserAttendanceQuery$data) => r.residents?.nodes?.[0],
 });

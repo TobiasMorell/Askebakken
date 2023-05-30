@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<98f4686f6945d1383cc5c451944a0b85>>
+ * @generated SignedSource<<b37aae72e831af7b4b499643cb1b749c>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -18,6 +18,7 @@ export type toggleAttendanceButtonAttendMutation$data = {
     readonly id: any;
     readonly participants: ReadonlyArray<{
       readonly firstName: string | null;
+      readonly id: any;
       readonly lastName: string | null;
     }>;
   };
@@ -40,7 +41,14 @@ var v0 = [
     "name": "userId"
   }
 ],
-v1 = [
+v1 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+},
+v2 = [
   {
     "alias": null,
     "args": [
@@ -66,13 +74,7 @@ v1 = [
     "name": "attend",
     "plural": false,
     "selections": [
-      {
-        "alias": null,
-        "args": null,
-        "kind": "ScalarField",
-        "name": "id",
-        "storageKey": null
-      },
+      (v1/*: any*/),
       {
         "alias": null,
         "args": null,
@@ -81,6 +83,7 @@ v1 = [
         "name": "participants",
         "plural": true,
         "selections": [
+          (v1/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -108,7 +111,7 @@ return {
     "kind": "Fragment",
     "metadata": null,
     "name": "toggleAttendanceButtonAttendMutation",
-    "selections": (v1/*: any*/),
+    "selections": (v2/*: any*/),
     "type": "Mutation",
     "abstractKey": null
   },
@@ -117,19 +120,19 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
     "name": "toggleAttendanceButtonAttendMutation",
-    "selections": (v1/*: any*/)
+    "selections": (v2/*: any*/)
   },
   "params": {
-    "cacheID": "55354930f8b7f1b19e6a325a61d5688d",
+    "cacheID": "0faf905a94eb714ef2d100403ad195bb",
     "id": null,
     "metadata": {},
     "name": "toggleAttendanceButtonAttendMutation",
     "operationKind": "mutation",
-    "text": "mutation toggleAttendanceButtonAttendMutation(\n  $menuPlanId: UUID!\n  $userId: UUID\n) {\n  attend(input: {menuPlanId: $menuPlanId, residentId: $userId}) {\n    id\n    participants {\n      firstName\n      lastName\n    }\n  }\n}\n"
+    "text": "mutation toggleAttendanceButtonAttendMutation(\n  $menuPlanId: UUID!\n  $userId: UUID\n) {\n  attend(input: {menuPlanId: $menuPlanId, residentId: $userId}) {\n    id\n    participants {\n      id\n      firstName\n      lastName\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "0b1a2ca850ee2425e835334afea52824";
+(node as any).hash = "46894c3ef2410e8fb00d23b361e87402";
 
 export default node;
