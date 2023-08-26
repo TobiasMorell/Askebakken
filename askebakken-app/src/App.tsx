@@ -27,6 +27,7 @@ const FoodTeamPage = React.lazy(
   () => import("./pages/food-team/food-team-page")
 );
 const ProfilePage = React.lazy(() => import("./pages/profile/profile-page"));
+const SettingsPage = React.lazy(() => import("./pages/settings/settings-page"));
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
       { path: "add-plan", Component: CreateMenuPlanPage },
       { path: "food-team", Component: FoodTeamPage },
       { path: "profile", Component: ProfilePage },
+      { path: "settings", Component: SettingsPage },
     ],
   },
   {

@@ -5,11 +5,8 @@ import {
   Center,
   HStack,
   Heading,
-  Icon,
-  Input,
   Stack,
   Text,
-  VStack,
   useToast,
 } from "@chakra-ui/react";
 import { useRecoilValue } from "recoil";

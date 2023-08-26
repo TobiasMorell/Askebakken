@@ -24,6 +24,8 @@ public class MenuPlan : SchemaBase
 
     public ICollection<Guid>? ChefIds { get; set; }
 
+    public string? Thumbnail { get; set; }
+
     /// <summary>
     /// Only available when using the <see cref="MenuPlanRelationResolver"/> (aka via GraphQL). Will be null server-side.
     /// </summary>

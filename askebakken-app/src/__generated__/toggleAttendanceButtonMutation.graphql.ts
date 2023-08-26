@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<3068327a5ba00b684a2f7879de0c0001>>
+ * @generated SignedSource<<f082afe3d60ba3c548259a5261a71285>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,22 +9,23 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Mutation } from 'relay-runtime';
-export type toggleAttendanceButtonUnattendMutation$variables = {
+export type toggleAttendanceButtonMutation$variables = {
   menuPlanId: any;
   userId?: any | null;
 };
-export type toggleAttendanceButtonUnattendMutation$data = {
-  readonly unattend: {
+export type toggleAttendanceButtonMutation$data = {
+  readonly toggleAttendance: {
     readonly id: any;
     readonly participants: ReadonlyArray<{
       readonly firstName: string | null;
+      readonly id: any;
       readonly lastName: string | null;
     }>;
   };
 };
-export type toggleAttendanceButtonUnattendMutation = {
-  response: toggleAttendanceButtonUnattendMutation$data;
-  variables: toggleAttendanceButtonUnattendMutation$variables;
+export type toggleAttendanceButtonMutation = {
+  response: toggleAttendanceButtonMutation$data;
+  variables: toggleAttendanceButtonMutation$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -40,7 +41,14 @@ var v0 = [
     "name": "userId"
   }
 ],
-v1 = [
+v1 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+},
+v2 = [
   {
     "alias": null,
     "args": [
@@ -63,16 +71,10 @@ v1 = [
     ],
     "concreteType": "MenuPlan",
     "kind": "LinkedField",
-    "name": "unattend",
+    "name": "toggleAttendance",
     "plural": false,
     "selections": [
-      {
-        "alias": null,
-        "args": null,
-        "kind": "ScalarField",
-        "name": "id",
-        "storageKey": null
-      },
+      (v1/*: any*/),
       {
         "alias": null,
         "args": null,
@@ -81,6 +83,7 @@ v1 = [
         "name": "participants",
         "plural": true,
         "selections": [
+          (v1/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -107,8 +110,8 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "toggleAttendanceButtonUnattendMutation",
-    "selections": (v1/*: any*/),
+    "name": "toggleAttendanceButtonMutation",
+    "selections": (v2/*: any*/),
     "type": "Mutation",
     "abstractKey": null
   },
@@ -116,20 +119,20 @@ return {
   "operation": {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
-    "name": "toggleAttendanceButtonUnattendMutation",
-    "selections": (v1/*: any*/)
+    "name": "toggleAttendanceButtonMutation",
+    "selections": (v2/*: any*/)
   },
   "params": {
-    "cacheID": "58e6d147d36d96434cb50e8b64b42904",
+    "cacheID": "ec94c87c4f1f5a5f937de84752528431",
     "id": null,
     "metadata": {},
-    "name": "toggleAttendanceButtonUnattendMutation",
+    "name": "toggleAttendanceButtonMutation",
     "operationKind": "mutation",
-    "text": "mutation toggleAttendanceButtonUnattendMutation(\n  $menuPlanId: UUID!\n  $userId: UUID\n) {\n  unattend(input: {menuPlanId: $menuPlanId, residentId: $userId}) {\n    id\n    participants {\n      firstName\n      lastName\n    }\n  }\n}\n"
+    "text": "mutation toggleAttendanceButtonMutation(\n  $menuPlanId: UUID!\n  $userId: UUID\n) {\n  toggleAttendance(input: {menuPlanId: $menuPlanId, residentId: $userId}) {\n    id\n    participants {\n      id\n      firstName\n      lastName\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "872989a1704b4cc2ae7a86a67fe2283d";
+(node as any).hash = "e961f42afb2eb5aeef9eeb8339bc4de7";
 
 export default node;

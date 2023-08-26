@@ -6,9 +6,7 @@ import { getStartOfPlan, getEndOfPlan } from "./helpers";
 import { stateResidentsQuery$data } from "../../__generated__/stateResidentsQuery.graphql";
 import { stateMenuPlansQuery$data } from "../../__generated__/stateMenuPlansQuery.graphql";
 import { stateUserAttendanceQuery$data } from "../../__generated__/stateUserAttendanceQuery.graphql";
-import { stateMenuPlanAttendanceChangedSubscription$data } from "../../__generated__/stateMenuPlanAttendanceChangedSubscription.graphql";
-import { AttendanceEvent } from "./types";
-import { appDisplayModeState } from "../../app-state/app-display-mode";
+import { devicePreferences } from "../../app-state/device-preferences";
 import {
   stateLoggedInUserHouseQuery$data,
   stateLoggedInUserHouseQuery$variables,
@@ -70,6 +68,7 @@ const loggedInUserHouse = graphQLSelector<
   query: graphql`
     query stateLoggedInUserHouseQuery {
       me {
+        id
         houseNumber
       }
     }
@@ -101,8 +100,8 @@ const residentsInHouse = graphQLSelectorFamily({
 export const residentsState = selector({
   key: "residentsState",
   get: ({ get }) => {
-    const appDisplayMode = get(appDisplayModeState);
-    if (appDisplayMode === "SYSTEM") {
+    const devicePrefs = get(devicePreferences);
+    if (devicePrefs.appDisplayMode === "SYSTEM") {
       return get(allResidents);
     }
 
@@ -124,12 +123,15 @@ export const menuPlanParticipantsState = graphQLSelectorFamily({
         nodes {
           id
           date
+          thumbnail
           recipes {
             id
             name
           }
           participants {
             id
+            firstName
+            lastName
           }
           guests {
             houseNumber
@@ -149,29 +151,6 @@ export const menuPlanParticipantsState = graphQLSelectorFamily({
   },
 });
 
-export const menuPlanAttendanceEvents = graphQLSelector({
-  key: "menuPlanAttendanceEvents",
-  environment: RelayEnvironment,
-  query: graphql`
-    subscription stateMenuPlanAttendanceChangedSubscription {
-      menuPlanAttendanceChanged {
-        menuPlanId
-        residentId
-        attending
-      }
-    }
-  `,
-  variables: () => ({}),
-  mapResponse: (
-    r: stateMenuPlanAttendanceChangedSubscription$data
-  ): AttendanceEvent => r.menuPlanAttendanceChanged,
-});
-
-export const menuPlanAttendanceEventsState = atom<AttendanceEvent[]>({
-  key: "menuPlanAttendanceEventsState",
-  default: [],
-});
-
 export const selectedDaysWithParticipantsState = selector({
   key: "selectedDaysWithParticipants",
   get: ({ get }) => {
@@ -182,52 +161,8 @@ export const selectedDaysWithParticipantsState = selector({
         endDate: selectedDays[selectedDays.length - 1],
       })
     );
-    console.log(menuPlans);
-    const attendanceEvents = get(menuPlanAttendanceEventsState);
 
-    const attendanceByMenuPlanId = attendanceEvents.groupBy(
-      (e) => e.menuPlanId
-    );
-
-    return selectedDays.map((d) => {
-      const plan = menuPlans?.find(
-        (p) => p.date.getDayOfYear() === d.getDayOfYear()
-      );
-      const attendanceEventsForPlan =
-        attendanceByMenuPlanId.get(plan?.id) ?? [];
-
-      const allParticipants = [
-        ...new Set(
-          attendanceEventsForPlan
-            .map((e) => e.residentId)
-            .concat(plan?.participants?.map((p) => p.id) ?? [])
-        ),
-      ];
-
-      return {
-        date: d,
-        dateName: d.getDanishWeekday(),
-        plan: plan
-          ? {
-              ...plan,
-              participants: allParticipants
-                .map((id) => {
-                  const event = attendanceEventsForPlan.find(
-                    (e) => e.residentId === id
-                  );
-                  if (event != null && !event.attending) {
-                    return null;
-                  }
-
-                  return {
-                    id,
-                  };
-                })
-                .filter((p) => p != null),
-            }
-          : null,
-      };
-    });
+    return menuPlans ?? [];
   },
 });
 

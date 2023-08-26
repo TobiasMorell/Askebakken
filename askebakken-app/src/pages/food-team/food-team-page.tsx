@@ -34,12 +34,12 @@ type DayWithMenuPlanAndChefs = Readonly<{
         date: Date;
         id: any;
         recipes: readonly Recipe[];
-        chefs: readonly Resident[];
+        chefs: readonly Omit<Resident, 'child'>[];
       }
     | undefined;
 }>;
 
-const NUMBER_OF_WEEKS_IN_GRID = 2;
+const NUMBER_OF_WEEKS_IN_GRID = 1;
 
 export default function FoodTeamPage() {
   const now = new Date();
@@ -49,7 +49,7 @@ export default function FoodTeamPage() {
   return (
     <Box padding={8}>
       <Stack spacing="8">
-        <Grid templateColumns="repeat(2, 1fr)" gap={8}>
+        <Grid templateColumns={`repeat(${NUMBER_OF_WEEKS_IN_GRID}, 1fr)`} gap={8}>
           {Array.enumerate({
             from: selectedStartingWeek,
             to: selectedStartingWeek + NUMBER_OF_WEEKS_IN_GRID,
@@ -110,7 +110,7 @@ function FoodTeamWeekPlan(props: { week: number }) {
     })
   );
 
-  function addNewPlanWithUserAsChef(date: Date, user: Resident) {
+  function addNewPlanWithUserAsChef(date: Date, user: Omit<Resident, 'child'>) {
     const newPlan = {
       chefs: [user],
       date: date,
