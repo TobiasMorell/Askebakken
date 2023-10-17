@@ -16,4 +16,6 @@ public class CreateResidentInput
     [MinLength(1)]
     [MaxLength(6)]
     public required string HouseNumber { get; set; }
+
+    public bool SendWelcomeEmail { get; set; } = false;
 }

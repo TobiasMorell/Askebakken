@@ -1,8 +1,7 @@
+using System.Security.Authentication;
 using Askebakken.GraphQL.Repository.Resident;
 using Askebakken.GraphQL.Schema;
 using Askebakken.GraphQL.Services.PasswordHasher;
-using MailKit.Security;
-using MongoDB.Driver;
 
 namespace Askebakken.GraphQL.Services;
 

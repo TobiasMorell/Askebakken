@@ -36,10 +36,7 @@ public class ResidentMutations
         CancellationToken cancellationToken = default)
     {
         var user = await userService.GetAuthenticatedUser(cancellationToken);
-        if (user is null)
-        {
-            throw new AuthenticationException();
-        }
+        if (user is null) throw new AuthenticationException();
 
         var email = template.ToUpperInvariant() switch
         {
@@ -52,30 +49,35 @@ public class ResidentMutations
         await emailService.Send(
             new Email(user.Username, $"{user.FirstName} {user.LastName}", $"Test af '{template}'", email),
             cancellationToken);
-        return new(true);
+        return new SuccessResult(true);
     }
 #endif
 
     [Error<UsernameAlreadyTakenError>]
     [Authorize(Roles = new[] { "Admin" })]
-    public async Task<Resident> CreateResident(CreateResidentInput resident,
+    public async Task<Resident> CreateResident([Service] IEmailService emailService, CreateResidentInput resident,
         CancellationToken cancellationToken = default)
     {
         var existingUser = await _residentRepository.GetResidentByUsername(resident.Username, cancellationToken);
-        if (existingUser is not null)
-        {
-            throw new UsernameAlreadyTakenError(resident.Username);
-        }
+        if (existingUser is not null) throw new UsernameAlreadyTakenError(resident.Username);
 
-        var actualResident = new Resident
+        var password = Guid.NewGuid().ToString("N");
+        var actualResident = await _residentRepository.Create(new Resident
         {
             Username = resident.Username,
-            PasswordHash = _passwordHasher.Hash(Guid.NewGuid().ToString("N")),
+            PasswordHash = _passwordHasher.Hash(password),
             FirstName = resident.FirstName,
             LastName = resident.LastName,
-            HouseNumber = resident.HouseNumber,
-        };
-        return await _residentRepository.Create(actualResident, cancellationToken: cancellationToken);
+            HouseNumber = resident.HouseNumber
+        }, cancellationToken);
+
+        if (resident.SendWelcomeEmail)
+            await emailService.Send(new Email(actualResident.Username,
+                $"{actualResident.FirstName} {actualResident.LastName}",
+                "Velkommen til Askebakkens beboerportal",
+                GetResidentWelcomeEmailTemplate(actualResident, password, actualResident)), cancellationToken);
+
+        return actualResident;
     }
 
     [Error<AuthenticationException>]
@@ -86,19 +88,19 @@ public class ResidentMutations
         var existingUser = await _authenticationService.GetResidentByUsernameAndPassword(authenticateInput.Username,
             authenticateInput.Password, cancellationToken);
 
-        return new(tokenService.GetToken(existingUser));
+        return new AuthenticateResult(tokenService.GetToken(existingUser));
     }
 
     public async Task<SuccessResult> ForgotPassword([Service] IEmailService emailService,
         ForgotPasswordInput forgotPasswordInput,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var existingUser =
             await _residentRepository.GetResidentByUsername(forgotPasswordInput.Username, cancellationToken);
         if (existingUser is null)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(RandomNumberGenerator.GetInt32(200, 1000)), cancellationToken);
-            return new(true);
+            return new SuccessResult(true);
         }
 
         var newPassword = Guid.NewGuid().ToString("N")[..8];
@@ -110,9 +112,10 @@ public class ResidentMutations
                 "Nyt kodeord til Askebakkens beboerportal", GetPasswordResetEmailTemplate(existingUser, newPassword))
             {
                 Preview = $"Din nye kode er {newPassword}",
+                Body = $"Din nye kode er {newPassword}"
             }, cancellationToken);
 
-        return new(true);
+        return new SuccessResult(true);
     }
 
     [Error<AuthenticationException>]
@@ -130,86 +133,96 @@ public class ResidentMutations
             new Email(user.Username, $"{user.FirstName} {user.LastName}",
                 "Dit kodeord til Askebakkens beboerportal er blevet ændret", GetChangePasswordEmailTemplate(user))
             {
-                Preview = "Dit kodeord er blevet ændret",
+                Preview = "Dit kodeord er blevet ændret"
             }, cancellationToken);
 
-        return new(true);
+        return new SuccessResult(true);
     }
 
-    private string GetChangePasswordEmailTemplate(Resident user) =>
-        $"""
+    private string GetChangePasswordEmailTemplate(Resident user)
+    {
+        return $"""
 {EmailHeader(user)}
 
-<p>Du har bedt om at få ændret dit kodeord til Askebakkens beboerportal.</p>
+                <p>Du har bedt om at få ændret dit kodeord til Askebakkens beboerportal.</p>
 
-<p>Hvis du ikke har bedt om dette, så kontakt venligst en administrator.</p>
-""";
+                <p>Hvis du ikke har bedt om dette, så kontakt venligst en administrator.</p>
+                """;
+    }
 
-    private string GetPasswordResetEmailTemplate(Resident resident, string newPassword) =>
-        $"""
+    private string GetPasswordResetEmailTemplate(Resident resident, string newPassword)
+    {
+        return $"""
 {EmailHeader(resident)}
 
-<p>Du har bedt om at få nulstillet dit kodeord til Askebakkens beboerportal.</p>
+                <p>Du har bedt om at få nulstillet dit kodeord til Askebakkens beboerportal.</p>
 
-<p>Dit nye kodeord er: <strong>{newPassword}</strong></p>
+                <p>Dit nye kodeord er: <strong>{newPassword}</strong></p>
 
-<p><i>Vi anbefaler at du skifter dit kodeord, når du har logget ind.</i></p>
+                <p><i>Vi anbefaler at du skifter dit kodeord, når du har logget ind.</i></p>
 
-<a href="https://beboer.askebakken.dk" style="padding: 16px;color: white;background-color: #38A169;border-radius: 8px;">Åben Askebakkens beboerportal</a>
+                <a href="https://beboer.askebakken.dk" style="padding: 16px;color: white;background-color: #38A169;border-radius: 8px;">Åben Askebakkens beboerportal</a>
 
-<p>Med venlig hilsen</p>
+                <p>Med venlig hilsen</p>
 
-<p>Askebakkens beboerportal</p>
-""";
+                <p>Askebakkens beboerportal</p>
+                """;
+    }
 
-    private string GetResidentWelcomeEmailTemplate(Resident resident, string password, Resident creator) => $"""
+    private string GetResidentWelcomeEmailTemplate(Resident resident, string password, Resident creator)
+    {
+        return $"""
 {EmailHeader(resident)}
-<table border=0 cellspacing="0" cellpadding="0" style="background-color: white">
-    <tr>
-        <td>
-            <p>Velkommen til Askebakkens beboerportal. Du er blevet oprettet som bruger af {creator.FirstName}.</p>
+                <table border=0 cellspacing="0" cellpadding="0" style="background-color: white">
+                    <tr>
+                        <td>
+                            <p>Velkommen til Askebakkens beboerportal. Du er blevet oprettet som bruger af {creator.FirstName}.</p>
+                
+                            <p>Du kan logge ind med følgende oplysninger<br />Brugernavn: {resident.Username}<br/>Kodeord: <strong>{password}</strong></p>
+                            <p><i>Vi anbefaler at du skifter dit kodeord, når du har logget ind.</i></p>
+                
+                            <br />
+                            <a href="https://beboer.askebakken.dk" style="padding: 16px;color: white;background-color: #38A169;border-radius: 8px;">Åben Askebakkens beboerportal</a>
+                            <br />
+                
+                            <p>På Askebakkens beboerportal kan du:</p>
+                            <ul>
+                                <li>Oprette madplaner</li>
+                                <li>Tilmelde dig til spisning</li>
+                                <li>Se hvem der er tilmeldt til spisning</li>
+                                <li>Tilmelde dig til madlavning</li>
+                            </ul>
+                
+                            <p>På sigt er det planen at Askebakkens beboerportal automatisk skal kunne:</p>
+                            <ul>
+                                <li>Udregne det månedlige madbudget pr. beboer</li>
+                                <li>Lave optælling af madlavning</li>
+                                <li>Planlægge hvem der laver madplan</li>
+                                <li>Samt meget andet, hvis der er interesse for det</li>
+                            </ul>
+                
+                            <p>Vi håber at du vil tage godt imod Askebakkens beboerportal.</p>
+                
+                            <p>Med venlig hilsen<br>Tobias Morell</p>
+                        </td>
+                    </tr>
+                </table>
+                """;
+    }
 
-            <p>Du kan logge ind med følgende oplysninger<br />Brugernavn: {resident.Username}<br/>Kodeord: <strong>{password}</strong></p>
-            <p><i>Vi anbefaler at du skifter dit kodeord, når du har logget ind.</i></p>
-
-            <br />
-            <a href="https://beboer.askebakken.dk" style="padding: 16px;color: white;background-color: #38A169;border-radius: 8px;">Åben Askebakkens beboerportal</a>
-            <br />
-
-            <p>På Askebakkens beboerportal kan du:</p>
-            <ul>
-                <li>Oprette madplaner</li>
-                <li>Tilmelde dig til spisning</li>
-                <li>Se hvem der er tilmeldt til spisning</li>
-                <li>Tilmelde dig til madlavning</li>
-            </ul>
-
-            <p>På sigt er det planen at Askebakkens beboerportal automatisk skal kunne:</p>
-            <ul>
-                <li>Udregne det månedlige madbudget pr. beboer</li>
-                <li>Lave optælling af madlavning</li>
-                <li>Planlægge hvem der laver madplan</li>
-                <li>Samt meget andet, hvis der er interesse for det</li>
-            </ul>
-
-            <p>Vi håber at du vil tage godt imod Askebakkens beboerportal.</p>
-
-            <p>Med venlig hilsen<br>Tobias Morell</p>
-        </td>
-    </tr>
-</table>
-""";
-    
-    private static string EmailHeader(Resident resident) => $"""
-<table border="0" cellspacing="0" cellpadding="0">
-    <tr>
-        <td align="center">
-            <img src="https://askebakken.dk/wp-content/uploads/2021/03/asketrae.png" style="height: 64px; width: auto; padding-left: 16px;" />
-        </td>
-        <td style="padding-left: 8px">
-            <strong>Hej {resident.FirstName} {resident.LastName}</strong>
-        </td>
-    </tr>
-</table>
-""";
+    private static string EmailHeader(Resident resident)
+    {
+        return $"""
+                <table border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td align="center">
+                            <img src="https://askebakken.dk/wp-content/uploads/2021/03/asketrae.png" style="height: 64px; width: auto; padding-left: 16px;" />
+                        </td>
+                        <td style="padding-left: 8px">
+                            <strong>Hej {resident.FirstName} {resident.LastName}</strong>
+                        </td>
+                    </tr>
+                </table>
+                """;
+    }
 }

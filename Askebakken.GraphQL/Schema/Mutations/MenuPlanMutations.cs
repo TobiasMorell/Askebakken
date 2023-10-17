@@ -28,19 +28,19 @@ public class MenuPlanMutations
     }
 
     [Error<NotFoundError>]
-    [Error<MenuPlanAlreadyExistsErrors>]
+    [Error<MenuPlanAlreadyExistsError>]
     [Authorize]
     public async Task<MenuPlan> CreateMenuPlan([Service] IRecipeRepository recipeRepo,
         CreateMenuPlanInput createMenuPlan,
         CancellationToken cancellationToken = default)
     {
+        var existingMenuPlan = await _menuPlanRepository.GetMenuPlanByDate(createMenuPlan.Date, cancellationToken);
+        if (existingMenuPlan is not null) throw new MenuPlanAlreadyExistsError(createMenuPlan.Date);
+        
         var recipes = await recipeRepo.GetRecipesAsync(createMenuPlan.Recipes, cancellationToken);
         var foundRecipeIds = recipes.Select(r => r.Id).ToHashSet();
         var missingRecipeIds = createMenuPlan.Recipes.Where(r => !foundRecipeIds.Contains(r));
         if (missingRecipeIds.Any()) throw new NotFoundError(nameof(Recipe), missingRecipeIds);
-
-        var existingMenuPlan = await _menuPlanRepository.GetMenuPlanByDate(createMenuPlan.Date, cancellationToken);
-        if (existingMenuPlan is not null) throw new MenuPlanAlreadyExistsErrors(createMenuPlan.Date);
 
         var actual = new MenuPlan()
         {
@@ -53,7 +53,7 @@ public class MenuPlanMutations
     }
 
     [Error<NotFoundError>]
-    [Error<MenuPlanAlreadyExistsErrors>]
+    [Error<MenuPlanAlreadyExistsError>]
     [Authorize]
     public async Task<IEnumerable<MenuPlan>> CreateWeekPlan([Service] IRecipeRepository recipeRepo,
         CreateWeekPlanInput createWeekPlan,
