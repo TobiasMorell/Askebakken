@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<102377692d44f87577f3554d68c999c8>>
+ * @generated SignedSource<<9d8514b26680a5f0d4c6d47a39b15926>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,16 +10,21 @@
 
 import { ConcreteRequest, Mutation } from 'relay-runtime';
 export type CreateWeekPlanInput = {
-  friday: ReadonlyArray<CreateRecipeInput>;
+  friday: CreateDayPlanInput;
   fromDate: any;
-  monday: ReadonlyArray<CreateRecipeInput>;
-  thursday: ReadonlyArray<CreateRecipeInput>;
-  tuesday: ReadonlyArray<CreateRecipeInput>;
-  wednesday: ReadonlyArray<CreateRecipeInput>;
+  monday: CreateDayPlanInput;
+  thursday: CreateDayPlanInput;
+  tuesday: CreateDayPlanInput;
+  wednesday: CreateDayPlanInput;
+};
+export type CreateDayPlanInput = {
+  recipes: ReadonlyArray<CreateRecipeInput>;
+  thumbnail?: string | null;
 };
 export type CreateRecipeInput = {
   category: string;
   name: string;
+  thumbnail?: string | null;
 };
 export type createMenuPlanPageMutation$variables = {
   input: CreateWeekPlanInput;

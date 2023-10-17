@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<a41dd33ba540bb7c84a159f3e002900b>>
+ * @generated SignedSource<<399f57f476161fed1980cd6d6ba9dedb>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -22,6 +22,7 @@ export type createMenuPlanPageMenuPlansBetweenQuery$data = {
         readonly category: string;
         readonly name: string;
       }>;
+      readonly thumbnail: string | null;
     }> | null;
   } | null;
 };
@@ -124,6 +125,13 @@ v1 = [
           {
             "alias": null,
             "args": null,
+            "kind": "ScalarField",
+            "name": "thumbnail",
+            "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
             "concreteType": "Recipe",
             "kind": "LinkedField",
             "name": "recipes",
@@ -171,16 +179,16 @@ return {
     "selections": (v1/*: any*/)
   },
   "params": {
-    "cacheID": "ee23ae4d393a487b1e189e33cd68afb7",
+    "cacheID": "6664733d782c3afd5b7f4f34991da157",
     "id": null,
     "metadata": {},
     "name": "createMenuPlanPageMenuPlansBetweenQuery",
     "operationKind": "query",
-    "text": "query createMenuPlanPageMenuPlansBetweenQuery(\n  $fromDate: DateTime!\n  $toDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $fromDate}}, {date: {lte: $toDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        name\n        category\n      }\n    }\n  }\n}\n"
+    "text": "query createMenuPlanPageMenuPlansBetweenQuery(\n  $fromDate: DateTime!\n  $toDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $fromDate}}, {date: {lte: $toDate}}]}) {\n    nodes {\n      id\n      date\n      thumbnail\n      recipes {\n        name\n        category\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "df929c5efa07e617a2c7e42c88377fe9";
+(node as any).hash = "29d58c9f400f3996d5bda60ae5e9ad00";
 
 export default node;

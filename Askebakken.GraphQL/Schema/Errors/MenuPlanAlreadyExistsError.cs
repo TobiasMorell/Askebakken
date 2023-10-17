@@ -1,15 +1,15 @@
 namespace Askebakken.GraphQL.Schema.Errors;
 
-public class MenuPlanAlreadyExistsErrors : Exception
+public class MenuPlanAlreadyExistsError : Exception
 {
-    private readonly DateTime _date;
+    public DateTime Date { get; private set; }
     
-    public MenuPlanAlreadyExistsErrors(DateTime date) : this($"A menu plan for date '{date}' already exists.")
+    public MenuPlanAlreadyExistsError(DateTime date) : this($"A menu plan for date '{date}' already exists.")
     {
-        _date = date;
+        Date = date;
     }
 
-    private MenuPlanAlreadyExistsErrors(string message) : base(message)
+    private MenuPlanAlreadyExistsError(string message) : base(message)
     {
     }
 }

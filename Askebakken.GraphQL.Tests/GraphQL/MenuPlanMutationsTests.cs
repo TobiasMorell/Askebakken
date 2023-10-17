@@ -1,5 +1,6 @@
 using Askebakken.GraphQL.Schema;
 using Askebakken.GraphQL.Schema.Errors;
+using Askebakken.GraphQL.Schema.Inputs;
 using Askebakken.GraphQL.Schema.Mutations;
 using Askebakken.GraphQL.Services;
 using Askebakken.GraphQL.Tests.Fakes;
@@ -10,6 +11,7 @@ public class MenuPlanMutationsTests
 {
     private readonly FakeResidentRepository _residentRepository = new();
     private readonly FakeMenuPlanRepository _menuPlanRepository = new();
+    private readonly FakeRecipeRepo _recipeRepo = new();
     private readonly FakeUserService _userService = new();
     private readonly Mock<IMenuPlannerService> _menuPlannerService = new();
 
@@ -18,6 +20,69 @@ public class MenuPlanMutationsTests
     public MenuPlanMutationsTests()
     {
         _mutations = new(_menuPlanRepository, _residentRepository, _userService, _menuPlannerService.Object);
+    }
+
+    [Fact]
+    public async Task CreateMenuPlan_throws_NotFoundError_when_given_invalid_recipe_id()
+    {
+        // Arrange
+        var recipeId = Guid.NewGuid();
+        
+        // Act and assert
+        await Should.ThrowAsync<NotFoundError>(() => _mutations.CreateMenuPlan(_recipeRepo, new CreateMenuPlanInput()
+        {
+            Date = DateTime.Today.AddDays(1),
+            Recipes = new List<Guid>()
+            {
+                recipeId
+            }
+        }));
+    }
+
+    [Fact]
+    public async Task CreateMenuPlan_creates_menu_plan_if_it_does_not_already_exist()
+    {
+        // Arrange
+        var recipe = await _recipeRepo.CreateRecipeAsync(new CreateRecipeInput()
+        {
+            Name = "Testsagna",
+            Category = "Main",
+        });
+        
+        // Act
+        var menuPlan = await _mutations.CreateMenuPlan(_recipeRepo, new CreateMenuPlanInput()
+        {
+            Date = DateTime.Today.AddDays(1),
+            Recipes = new List<Guid>()
+            {
+                recipe.Id
+            }
+        });
+        
+        // Assert
+        var menuPlanFromDb = _menuPlanRepository.CreatedMenuPlans.ShouldHaveSingleItem();
+        menuPlanFromDb.ShouldNotBeNull();
+        menuPlanFromDb.ShouldBeEquivalentTo(menuPlan);
+    }
+
+    [Fact]
+    public async Task CreateMenuPlan_throws_MenuPlanAlreadyExistsError_if_a_menu_plan_exists_on_the_given_date()
+    {
+        // Arrange
+        var date = DateTime.UtcNow.AddDays(3);
+        var menuPlan = new MenuPlan() { Id = Guid.NewGuid(), Date = date, };
+        _menuPlanRepository.AddMockData(menuPlan);
+        
+        // Act and assert
+        var exception = await Should.ThrowAsync<MenuPlanAlreadyExistsError>(() => _mutations.CreateMenuPlan(_recipeRepo, new CreateMenuPlanInput()
+        {
+            Date = date,
+            Recipes = new List<Guid>()
+            {
+                Guid.NewGuid()
+            }
+        }));
+        exception.Date.ShouldBe(date);
     }
 
     [Fact]

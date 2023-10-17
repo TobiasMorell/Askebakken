@@ -14,7 +14,6 @@ import {
   ModalHeader,
   ModalOverlay,
   Select,
-  Spacer,
   Spinner,
   Stack,
   Table,
@@ -40,16 +39,10 @@ import {
 import { graphQLSelector } from "recoil-relay";
 import { RelayEnvironment } from "../../RelayEnvironment";
 import { createMenuPlanPageMenuPlansBetweenQuery$data } from "../../__generated__/createMenuPlanPageMenuPlansBetweenQuery.graphql";
-import {
-  atom,
-  selector,
-  useRecoilState,
-  useRecoilValue,
-  useRecoilValueLoadable,
-} from "recoil";
+import { atom, selector, useRecoilState, useRecoilValue } from "recoil";
 import { graphql, useMutation } from "react-relay";
-import { Recipe } from "../planner/types";
 import {
+  CreateDayPlanInput,
   CreateRecipeInput,
   createMenuPlanPageMutation$variables,
 } from "../../__generated__/createMenuPlanPageMutation.graphql";
@@ -100,6 +93,7 @@ const menuPlansInWeek = graphQLSelector({
         nodes {
           id
           date
+          thumbnail
           recipes {
             name
             category
@@ -118,12 +112,17 @@ const menuPlansInWeek = graphQLSelector({
     return vars;
   },
   mapResponse: (r: createMenuPlanPageMenuPlansBetweenQuery$data): MenuPlan[] =>
-    r.menuPlan?.nodes?.map((n) => ({ ...n, date: new Date(n.date) })) ?? [],
+    r.menuPlan?.nodes?.map((n) => ({
+      ...n,
+      date: new Date(n.date),
+      thumbnail: n.thumbnail ?? undefined,
+    })) ?? [],
 });
 
 type MenuPlan = Readonly<{
   date: Date;
   id: string;
+  thumbnail?: string;
   recipes: ReadonlyArray<{
     category: string;
     name: string;
@@ -226,7 +225,6 @@ function WeekPlannerTable() {
           });
         },
         onError: (e) => {
-          console.error("Error creating week plan", e);
           toast({
             title: "Ugeplan kunne ikke oprettes",
             description:
@@ -236,9 +234,7 @@ function WeekPlannerTable() {
         },
       });
 
-      function createMenuPlanForDay(
-        weekDayNumber: number
-      ): readonly CreateRecipeInput[] {
+      function createMenuPlanForDay(weekDayNumber: number): CreateDayPlanInput {
         const planForDay = editedMenuPlans.find(
           (d) =>
             d.date.getDayOfYear() == weekDates[weekDayNumber].getDayOfYear()
@@ -247,7 +243,10 @@ function WeekPlannerTable() {
           throw weekDates[weekDayNumber];
         }
 
-        return planForDay.recipes;
+        return {
+          recipes: planForDay.recipes,
+          thumbnail: planForDay.thumbnail,
+        };
       }
     } catch (e) {
       if (e instanceof Date) {
@@ -336,6 +335,7 @@ function WeekPlannerTable() {
                   </Tooltip>
                 </HStack>
               </Td>
+              <Td>Thumbnail</Td>
             </Tr>
             {weekDates.map((d) => (
               <DayPlan
@@ -431,6 +431,19 @@ function DayPlan(props: {
             />
           </Td>
         ))}
+        <Td>
+          <Input
+            value={props.menuPlan?.thumbnail}
+            onChange={(evt) =>
+              props.onChange({
+                id: props.menuPlan?.id,
+                date: props.date,
+                recipes: Array.from(recipes?.values() ?? []),
+                thumbnail: evt.target.value,
+              })
+            }
+          />
+        </Td>
       </Tr>
 
       {props.date.getDay() === 5 && (

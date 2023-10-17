@@ -73,7 +73,6 @@ export function LoginPage(props: {}) {
         navigate("/", { replace: true });
       },
       onError: (error) => {
-        console.error(error);
         toast({
           title: "Forkert email eller kodeord",
           status: "error",

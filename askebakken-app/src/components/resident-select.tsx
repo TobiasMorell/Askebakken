@@ -3,7 +3,6 @@ import { graphQLSelector } from "recoil-relay";
 import { graphql } from "relay-runtime";
 import { RelayEnvironment } from "../RelayEnvironment";
 import {
-  residentSelectQuery,
   residentSelectQuery$data,
   residentSelectQuery$variables,
 } from "../__generated__/residentSelectQuery.graphql";
@@ -17,6 +16,7 @@ const residentsQuery = graphql`
         id
         firstName
         lastName
+        child
       }
     }
   }

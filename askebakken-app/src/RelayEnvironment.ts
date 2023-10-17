@@ -13,11 +13,6 @@ import { getAuthToken } from "./state/token";
 const HTTP_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT;
 const WEBSOCKET_ENDPOINT = import.meta.env.VITE_GRAPHQL_WEBSOCKET_ENDPOINT;
 
-console.log({
-  HTTP_ENDPOINT,
-  WEBSOCKET_ENDPOINT,
-});
-
 const fetchFn: FetchFunction = async (request, variables) => {
   const token = getAuthToken();
 

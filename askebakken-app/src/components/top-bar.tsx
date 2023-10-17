@@ -12,26 +12,19 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  MenuDivider,
   useDisclosure,
   useColorModeValue,
   Stack,
   Spinner,
-  Select,
-  MenuGroup,
 } from "@chakra-ui/react";
-import { HamburgerIcon, CloseIcon, CheckIcon } from "@chakra-ui/icons";
+import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { graphQLSelector } from "recoil-relay";
 import { RelayEnvironment } from "../RelayEnvironment";
 import { graphql } from "react-relay";
 import { topBarMeQuery$data } from "../__generated__/topBarMeQuery.graphql";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilValue } from "recoil";
 import { clearAuthToken } from "../state/token";
-import {
-  appDisplayModeState,
-  toAppDisplayMode,
-} from "../app-state/app-display-mode";
 
 const loggedInUser = graphQLSelector({
   query: graphql`
@@ -74,8 +67,6 @@ function NavLink({ children, to }: { children: ReactNode; to: string }) {
 export default function TopBar(props: { menuItems: TopBarLink[] }) {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [appDisplayMode, setAppDisplayMode] =
-    useRecoilState(appDisplayModeState);
 
   function logOut() {
     clearAuthToken();
@@ -126,25 +117,9 @@ export default function TopBar(props: { menuItems: TopBarLink[] }) {
                 <RouterLink to="/profile">
                   <MenuItem>Profil</MenuItem>
                 </RouterLink>
-                <MenuGroup title="App layout">
-                  <MenuItem
-                    onClick={() => setAppDisplayMode("RESIDENT")}
-                    icon={
-                      appDisplayMode === "RESIDENT" ? <CheckIcon /> : undefined
-                    }
-                  >
-                    Personlig
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => setAppDisplayMode("SYSTEM")}
-                    icon={
-                      appDisplayMode === "SYSTEM" ? <CheckIcon /> : undefined
-                    }
-                  >
-                    Fælleshus
-                  </MenuItem>
-                </MenuGroup>
-                <MenuDivider />
+                <RouterLink to="/settings">
+                  <MenuItem>Indstillinger</MenuItem>
+                </RouterLink>
                 <MenuItem onClick={logOut}>Log ud</MenuItem>
               </MenuList>
             </Menu>

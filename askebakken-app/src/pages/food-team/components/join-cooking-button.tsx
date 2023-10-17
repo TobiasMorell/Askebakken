@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useMutation } from "react-relay";
 import { useRecoilValue } from "recoil";
 import { graphql } from "relay-runtime";
-import { appDisplayModeState } from "../../../app-state/app-display-mode";
+import { devicePreferences } from "../../../app-state/device-preferences";
 import { joinCookingButtonMutation } from "../../../__generated__/joinCookingButtonMutation.graphql";
 import { Resident } from "../../planner/types";
 import { ResidentSelect } from "../../../components/resident-select";
@@ -11,15 +11,18 @@ import { ResidentSelect } from "../../../components/resident-select";
 export function JoinCookingButton(props: {
   date: Date;
   menuPlanId: string | undefined;
-  onUserJoinedNewDate: (user: Resident) => void;
+  onUserJoinedNewDate: (
+    user: Pick<Resident, "id" | "firstName" | "lastName">
+  ) => void;
 }) {
   const toast = useToast();
 
   const [selectedResident, setSelectedResident] = useState<string>();
 
-  const appDisplayMode = useRecoilValue(appDisplayModeState);
+  const devicePrefs = useRecoilValue(devicePreferences);
 
-  const joinButtonDisabled = appDisplayMode === "SYSTEM" && !selectedResident;
+  const joinButtonDisabled =
+    devicePrefs.appDisplayMode === "SYSTEM" && !selectedResident;
 
   const [join, loading] = useMutation<joinCookingButtonMutation>(graphql`
     mutation joinCookingButtonMutation($date: DateTime!, $residentId: UUID) {
@@ -51,9 +54,14 @@ export function JoinCookingButton(props: {
         }
       },
       onError: (error) => {
+        const errorMessage = (error as any).source.errors[0].extensions.message;
+        const desc = errorMessage.includes("EventIsInThePastError")
+          ? "Du kan ikke tilmelde dig til madlavning bag ud i tid"
+          : "Måske er der allerede 2 på madholdet";
+
         toast({
           title: "Der skete en fejl",
-          description: "Måske er der allerede 2 på madholdet",
+          description: desc,
           status: "error",
         });
       },
@@ -62,7 +70,7 @@ export function JoinCookingButton(props: {
 
   return (
     <Stack>
-      {appDisplayMode === "SYSTEM" && (
+      {devicePrefs.appDisplayMode === "SYSTEM" && (
         <ResidentSelect
           placeholder="Hvem vil du tilmelde?"
           onChange={setSelectedResident}

@@ -13,6 +13,7 @@ type MenuPlan {
   chefs: [Resident!]!
   guests: [Guest!]!
   date: DateTime!
+  thumbnail: String
   id: UUID!
   createdAt: DateTime!
   modifiedAt: DateTime!
@@ -114,8 +115,7 @@ type Mutation {
   createRecipe(createRecipe: CreateRecipeInput!): Recipe!
   createMenuPlan(createMenuPlan: CreateMenuPlanInput!): MenuPlan!
   createWeekPlan(createWeekPlan: CreateWeekPlanInput!): [MenuPlan!]!
-  attend(input: MenuPlanAttendanceInput!): MenuPlan!
-  unattend(input: MenuPlanAttendanceInput!): MenuPlan!
+  toggleAttendance(input: MenuPlanAttendanceInput!): MenuPlan!
   signUpForCooking(date: DateTime!, residentId: UUID): MenuPlan!
   removeSignUpForCooking(
     date: DateTime!
@@ -128,6 +128,7 @@ type Mutation {
     numberOfChildGuests: Int
     numberOfAdultGuests: Int
   ): MenuPlan!
+  testEmail(template: String!): SuccessResult!
   createResident(resident: CreateResidentInput!): Resident!
   authenticate(authenticateInput: AuthenticateInput!): AuthenticateResult!
   forgotPassword(forgotPasswordInput: ForgotPasswordInput!): SuccessResult!
@@ -144,7 +145,7 @@ type Subscriptions {
   menuPlanAttendanceChanged: AttendanceChangedEventMessage!
 }
 
-scalar UUID
+scalar UUID @specifiedBy(url: "https://tools.ietf.org/html/rfc4122")
 
 type Recipe {
   name: String!
@@ -163,7 +164,7 @@ type Guest {
 """
 The `DateTime` scalar represents an ISO-8601 compliant date time type.
 """
-scalar DateTime
+scalar DateTime @specifiedBy(url: "https://www.graphql-scalars.com/date-time")
 
 input MenuPlanFilterInput {
   and: [MenuPlanFilterInput!]
@@ -174,6 +175,7 @@ input MenuPlanFilterInput {
   participantIds: ListUuidOperationFilterInput
   participants: ListFilterInputTypeOfResidentFilterInput
   chefIds: ListUuidOperationFilterInput
+  thumbnail: StringOperationFilterInput
   chefs: ListFilterInputTypeOfResidentFilterInput
   guests: ListFilterInputTypeOfGuestFilterInput
   id: UuidOperationFilterInput
@@ -183,6 +185,7 @@ input MenuPlanFilterInput {
 
 input MenuPlanSortInput {
   date: SortEnumType
+  thumbnail: SortEnumType
   id: SortEnumType
   createdAt: SortEnumType
   modifiedAt: SortEnumType
@@ -356,6 +359,21 @@ input ListFilterInputTypeOfResidentFilterInput {
   any: Boolean
 }
 
+input StringOperationFilterInput {
+  and: [StringOperationFilterInput!]
+  or: [StringOperationFilterInput!]
+  eq: String
+  neq: String
+  contains: String
+  ncontains: String
+  in: [String]
+  nin: [String]
+  startsWith: String
+  nstartsWith: String
+  endsWith: String
+  nendsWith: String
+}
+
 input ListFilterInputTypeOfGuestFilterInput {
   all: GuestFilterInput
   none: GuestFilterInput
@@ -421,21 +439,6 @@ type MenuPlanEdge {
   The item at the end of the edge.
   """
   node: MenuPlan!
-}
-
-input StringOperationFilterInput {
-  and: [StringOperationFilterInput!]
-  or: [StringOperationFilterInput!]
-  eq: String
-  neq: String
-  contains: String
-  ncontains: String
-  in: [String]
-  nin: [String]
-  startsWith: String
-  nstartsWith: String
-  endsWith: String
-  nendsWith: String
 }
 
 """
@@ -510,12 +513,20 @@ input IntOperationFilterInput {
   nlte: Int
 }
 
-input ForgotPasswordInput {
-  username: String!
+type AttendanceChangedEventMessage {
+  menuPlanId: UUID!
+  residentId: UUID!
+  attending: Boolean!
 }
 
-type SuccessResult {
-  success: Boolean!
+input ChangePasswordInput {
+  username: String!
+  oldPassword: String!
+  newPassword: String!
+}
+
+input ForgotPasswordInput {
+  username: String!
 }
 
 input AuthenticateInput {
@@ -529,10 +540,13 @@ type AuthenticateResult {
 
 input CreateResidentInput {
   username: String!
-  password: String!
   firstName: String
   lastName: String
   houseNumber: String!
+}
+
+type SuccessResult {
+  success: Boolean!
 }
 
 input MenuPlanAttendanceInput {
@@ -542,14 +556,15 @@ input MenuPlanAttendanceInput {
 
 input CreateWeekPlanInput {
   fromDate: DateTime!
-  monday: [CreateRecipeInput!]!
-  tuesday: [CreateRecipeInput!]!
-  wednesday: [CreateRecipeInput!]!
-  thursday: [CreateRecipeInput!]!
-  friday: [CreateRecipeInput!]!
+  monday: CreateDayPlanInput!
+  tuesday: CreateDayPlanInput!
+  wednesday: CreateDayPlanInput!
+  thursday: CreateDayPlanInput!
+  friday: CreateDayPlanInput!
 }
 
 input CreateMenuPlanInput {
+  thumbnail: String
   recipes: [UUID!]!
   date: DateTime!
 }
@@ -557,16 +572,10 @@ input CreateMenuPlanInput {
 input CreateRecipeInput {
   name: String!
   category: String!
+  thumbnail: String
 }
 
-input ChangePasswordInput {
-  username: String!
-  oldPassword: String!
-  newPassword: String!
-}
-
-type AttendanceChangedEventMessage {
-  menuPlanId: UUID!
-  residentId: UUID!
-  attending: Boolean!
+input CreateDayPlanInput {
+  thumbnail: String
+  recipes: [CreateRecipeInput!]!
 }
