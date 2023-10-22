@@ -36,7 +36,7 @@ export function ToggleAttendanceButton(props: {
       onCompleted: () => {
         toast({
           title: attendsPlan ? "Du er nu frameldt" : "Du er nu tilmeldt",
-          status: "info",
+          status: "success",
         });
       },
       onError: (error) => {

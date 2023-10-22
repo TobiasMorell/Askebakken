@@ -17,7 +17,7 @@ import { useRecoilValue } from "recoil";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
 import { Recipes } from "../components/recipes";
 import { WeekPlanGuests } from "../components/week-plan-guests";
-import { selectedDaysWithParticipantsState } from "../state";
+import { selectedDaysWithParticipantsState } from "../menu-planner-state";
 import { Resident } from "../types";
 import {
   PlannerPageLayoutProviderProps,

@@ -142,7 +142,7 @@ enum ApplyPolicy {
 }
 
 type Subscriptions {
-  menuPlanAttendanceChanged: AttendanceChangedEventMessage!
+  menuPlanUpdated: MenuPlanUpdatedEventMessage!
 }
 
 scalar UUID @specifiedBy(url: "https://tools.ietf.org/html/rfc4122")
@@ -307,8 +307,9 @@ type NotFoundError {
   ids: [UUID!]!
 }
 
-type MenuPlanAlreadyExistsErrors {
+type MenuPlanAlreadyExistsError {
   message: String!
+  date: DateTime!
 }
 
 type EventIsInThePastError {
@@ -513,10 +514,8 @@ input IntOperationFilterInput {
   nlte: Int
 }
 
-type AttendanceChangedEventMessage {
-  menuPlanId: UUID!
-  residentId: UUID!
-  attending: Boolean!
+type MenuPlanUpdatedEventMessage {
+  updatedMenuPlan: MenuPlan!
 }
 
 input ChangePasswordInput {
@@ -543,6 +542,7 @@ input CreateResidentInput {
   firstName: String
   lastName: String
   houseNumber: String!
+  sendWelcomeEmail: Boolean!
 }
 
 type SuccessResult {

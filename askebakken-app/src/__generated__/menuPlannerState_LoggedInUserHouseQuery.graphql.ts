@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<29abc9ea6b1d71b39399369126748e56>>
+ * @generated SignedSource<<0ad3bc4964473ba7f5e19147301e297d>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,16 +9,16 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type stateLoggedInUserHouseQuery$variables = {};
-export type stateLoggedInUserHouseQuery$data = {
+export type menuPlannerState_LoggedInUserHouseQuery$variables = {};
+export type menuPlannerState_LoggedInUserHouseQuery$data = {
   readonly me: {
     readonly houseNumber: string;
     readonly id: any;
   };
 };
-export type stateLoggedInUserHouseQuery = {
-  response: stateLoggedInUserHouseQuery$data;
-  variables: stateLoggedInUserHouseQuery$variables;
+export type menuPlannerState_LoggedInUserHouseQuery = {
+  response: menuPlannerState_LoggedInUserHouseQuery$data;
+  variables: menuPlannerState_LoggedInUserHouseQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -54,7 +54,7 @@ return {
     "argumentDefinitions": [],
     "kind": "Fragment",
     "metadata": null,
-    "name": "stateLoggedInUserHouseQuery",
+    "name": "menuPlannerState_LoggedInUserHouseQuery",
     "selections": (v0/*: any*/),
     "type": "Query",
     "abstractKey": null
@@ -63,20 +63,20 @@ return {
   "operation": {
     "argumentDefinitions": [],
     "kind": "Operation",
-    "name": "stateLoggedInUserHouseQuery",
+    "name": "menuPlannerState_LoggedInUserHouseQuery",
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "15f3d634270afc08dcd72e7fcf343832",
+    "cacheID": "7df3a24138be05f99e71bc07c0f488bb",
     "id": null,
     "metadata": {},
-    "name": "stateLoggedInUserHouseQuery",
+    "name": "menuPlannerState_LoggedInUserHouseQuery",
     "operationKind": "query",
-    "text": "query stateLoggedInUserHouseQuery {\n  me {\n    id\n    houseNumber\n  }\n}\n"
+    "text": "query menuPlannerState_LoggedInUserHouseQuery {\n  me {\n    id\n    houseNumber\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "a5f28ea91380af250d2348206df90b37";
+(node as any).hash = "d73057ebc7b762a42b5e315681b67aff";
 
 export default node;

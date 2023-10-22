@@ -1,6 +1,6 @@
-namespace Askebakken.GraphQL.Schema.Subscriptions;
+namespace Askebakken.GraphQL.Schema.Subscriptions.EventMessages;
 
-public record AttendanceChangedEventMessage(Guid MenuPlanId, Guid ResidentId, bool Attending)
+public record MenuPlanUpdatedEventMessage(MenuPlan UpdatedMenuPlan)
 {
-    public const string Topic = "MenuPlanAttendanceChanged";
+    public const string Topic = "MenuPlanUpdatedEvent";
 }

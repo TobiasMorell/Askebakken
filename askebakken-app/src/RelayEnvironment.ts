@@ -57,6 +57,11 @@ if (typeof window !== "undefined") {
           operationName: request.name,
           query: request.text,
           variables,
+          extensions: {
+            Headers: {
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          },
         },
         sink
       );

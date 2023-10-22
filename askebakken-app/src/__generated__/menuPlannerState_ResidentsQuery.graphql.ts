@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<8f45bd1506bb5d14d818919f4fb2ee9f>>
+ * @generated SignedSource<<319b505113f3d137ffc83e3899904c8c>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,8 +9,8 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type stateResidentsQuery$variables = {};
-export type stateResidentsQuery$data = {
+export type menuPlannerState_ResidentsQuery$variables = {};
+export type menuPlannerState_ResidentsQuery$data = {
   readonly residents: {
     readonly nodes: ReadonlyArray<{
       readonly child: boolean;
@@ -21,9 +21,9 @@ export type stateResidentsQuery$data = {
     }> | null;
   } | null;
 };
-export type stateResidentsQuery = {
-  response: stateResidentsQuery$data;
-  variables: stateResidentsQuery$variables;
+export type menuPlannerState_ResidentsQuery = {
+  response: menuPlannerState_ResidentsQuery$data;
+  variables: menuPlannerState_ResidentsQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -91,7 +91,7 @@ return {
     "argumentDefinitions": [],
     "kind": "Fragment",
     "metadata": null,
-    "name": "stateResidentsQuery",
+    "name": "menuPlannerState_ResidentsQuery",
     "selections": (v0/*: any*/),
     "type": "Query",
     "abstractKey": null
@@ -100,20 +100,20 @@ return {
   "operation": {
     "argumentDefinitions": [],
     "kind": "Operation",
-    "name": "stateResidentsQuery",
+    "name": "menuPlannerState_ResidentsQuery",
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "2338ed89d0e75151141f545a927f4ee6",
+    "cacheID": "73b1cb3fc70827c3c9ee239db79685d8",
     "id": null,
     "metadata": {},
-    "name": "stateResidentsQuery",
+    "name": "menuPlannerState_ResidentsQuery",
     "operationKind": "query",
-    "text": "query stateResidentsQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
+    "text": "query menuPlannerState_ResidentsQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "a820b200d7dfba70e9b0278bb963b4fb";
+(node as any).hash = "57e8b042c5076c3cbccd1b4de812b95f";
 
 export default node;

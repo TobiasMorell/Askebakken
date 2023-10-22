@@ -1,5 +1,5 @@
 import { RecoilValueReadOnly } from "recoil";
-import { selectedDaysWithParticipantsState } from "../state";
+import { selectedDaysWithParticipantsState } from "../menu-planner-state";
 import { Resident } from "../types";
 
 export type PlannerPageLayoutProviderProps = {

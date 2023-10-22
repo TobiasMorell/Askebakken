@@ -1,7 +1,7 @@
 import { useInterval } from "@chakra-ui/react";
 import { useSetRecoilState } from "recoil";
 import { getStartOfPlan, getEndOfPlan } from "./helpers";
-import { startDateState, endDateState } from "./state";
+import { startDateState, endDateState } from "./menu-planner-state";
 
 export function useAutomaticWeekChange() {
   const setStartDate = useSetRecoilState(startDateState);
