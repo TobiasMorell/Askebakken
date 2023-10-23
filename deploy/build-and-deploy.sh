@@ -55,17 +55,19 @@ echo "Building and deploying to $TARGET with domain $DOMAIN"
 docker build -t $DOMAIN/graphql -f ../.dockerfile ..
 
 # Cache the value of the .env file
-cp ../askebakken-app/.env ../askebakken-app/.env.bak
+APP_ENV_FILE=../askebakken-app/.env
+APP_ENV_BACKUP_FILE=../askebakken-app/.env.bak
+cp $APP_ENV_FILE $APP_ENV_BACKUP_FILE
 
 # Replace .env variables with production values
-sed -i "s|VITE_GRAPHQL_ENDPOINT=.*|VITE_GRAPHQL_ENDPOINT=https://$DOMAIN/graphql|g" ../askebakken-app/.env
-sed -i "s|VITE_GRAPHQL_WEBSOCKET_ENDPOINT=.*|VITE_GRAPHQL_WEBSOCKET_ENDPOINT=wss://$DOMAIN/graphql|g" ../askebakken-app/.env
-
-# Restore .env to development values
-cp ../askebakken-app/.env.bak ../askebakken-app/.env
-rm ../askebakken-app/.env.bak
+sed -i "s|VITE_GRAPHQL_ENDPOINT=.*|VITE_GRAPHQL_ENDPOINT=https://$DOMAIN/graphql|g" $APP_ENV_FILE
+sed -i "s|VITE_GRAPHQL_WEBSOCKET_ENDPOINT=.*|VITE_GRAPHQL_WEBSOCKET_ENDPOINT=wss://$DOMAIN/graphql|g" $APP_ENV_FILE
 
 docker build -t $DOMAIN/app -f ../askebakken-app/.dockerfile ../askebakken-app
+
+# Restore .env to development values
+cp $APP_ENV_BACKUP_FILE $APP_ENV_FILE
+rm $APP_ENV_BACKUP_FILE
 
 docker save $DOMAIN/graphql -o askebakken-graphql
 docker save $DOMAIN/app -o askebakken-app
