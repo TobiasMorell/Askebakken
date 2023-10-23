@@ -56,8 +56,8 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
     <Box padding={{ base: 4, md: 8, lg: 16 }}>
       <SimpleGrid spacing={10} columns={{ sm: 1, md: 2, xl: 4 }}>
         {props.menuPlans.map((d) => (
-          <GridItem>
-            <Card key={`name-${d.date.getDayOfYear()}`} variant="elevated">
+          <GridItem key={`name-${d.date.getDayOfYear()}`}>
+            <Card variant="elevated">
               <CardBody>
                 <Stack mt="6">
                   <Heading size="sm">

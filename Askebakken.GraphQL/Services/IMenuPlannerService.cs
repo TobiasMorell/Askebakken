@@ -2,6 +2,7 @@ using Askebakken.GraphQL.Repository.MenuPlan;
 using Askebakken.GraphQL.Repository.Resident;
 using Askebakken.GraphQL.Schema;
 using Askebakken.GraphQL.Schema.Subscriptions;
+using Askebakken.GraphQL.Schema.Subscriptions.EventMessages;
 using HotChocolate.Subscriptions;
 using MongoDB.Driver;
 
@@ -39,6 +40,8 @@ public class MenuPlannerService : IMenuPlannerService
         var updateResident = _residentRepository.Update(chef, cancellationToken: cancellationToken);
 
         await Task.WhenAll(updateMenuPlan, updateResident);
+
+        await PublishMenuPlanChangedEvent(updateMenuPlan, cancellationToken);
     }
 
     public async Task RemoveFromCooking(MenuPlan menuPlan, Resident chef, CancellationToken cancellationToken = default)
@@ -50,6 +53,8 @@ public class MenuPlannerService : IMenuPlannerService
         var updateResident = _residentRepository.Update(chef, cancellationToken: cancellationToken);
 
         await Task.WhenAll(updateMenuPlan, updateResident);
+
+        await PublishMenuPlanChangedEvent(updateMenuPlan, cancellationToken);
     }
 
     public async Task AttendMenuPlan(MenuPlan menuPlan,
@@ -65,8 +70,7 @@ public class MenuPlannerService : IMenuPlannerService
 
         await Task.WhenAll(replaceMenuPlan, updateResident);
 
-        await _eventSender.SendAsync(AttendanceChangedEventMessage.Topic,
-            new AttendanceChangedEventMessage(menuPlan.Id, resident.Id, true), cancellationToken);
+        await PublishMenuPlanChangedEvent(replaceMenuPlan, cancellationToken);
     }
 
     public async Task UnattendMenuPlan(MenuPlan menuPlan,
@@ -82,7 +86,13 @@ public class MenuPlannerService : IMenuPlannerService
 
         await Task.WhenAll(replaceMenuPlan, updateResident);
 
-        await _eventSender.SendAsync(AttendanceChangedEventMessage.Topic,
-            new AttendanceChangedEventMessage(menuPlan.Id, resident.Id, false), cancellationToken);
+        await PublishMenuPlanChangedEvent(replaceMenuPlan, cancellationToken);
+    }
+
+    private async Task PublishMenuPlanChangedEvent(Task<MenuPlan> menuPlanTaskGenerator, CancellationToken cancellationToken = default)
+    {
+        var menuPlan = await menuPlanTaskGenerator;
+        await _eventSender.SendAsync(MenuPlanUpdatedEventMessage.Topic,
+            new MenuPlanUpdatedEventMessage(menuPlan), cancellationToken);
     }
 }

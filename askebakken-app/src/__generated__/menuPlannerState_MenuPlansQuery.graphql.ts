@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<e4cc3ce05287e926ee12ad50d84c394b>>
+ * @generated SignedSource<<cac56561d1ed66a52c938e91b3e1cbb7>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,11 +9,11 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type stateMenuPlansQuery$variables = {
+export type menuPlannerState_MenuPlansQuery$variables = {
   endDate: any;
   startDate: any;
 };
-export type stateMenuPlansQuery$data = {
+export type menuPlannerState_MenuPlansQuery$data = {
   readonly menuPlan: {
     readonly nodes: ReadonlyArray<{
       readonly date: any;
@@ -36,9 +36,9 @@ export type stateMenuPlansQuery$data = {
     }> | null;
   } | null;
 };
-export type stateMenuPlansQuery = {
-  response: stateMenuPlansQuery$data;
-  variables: stateMenuPlansQuery$variables;
+export type menuPlannerState_MenuPlansQuery = {
+  response: menuPlannerState_MenuPlansQuery$data;
+  variables: menuPlannerState_MenuPlansQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -230,7 +230,7 @@ return {
     ],
     "kind": "Fragment",
     "metadata": null,
-    "name": "stateMenuPlansQuery",
+    "name": "menuPlannerState_MenuPlansQuery",
     "selections": (v3/*: any*/),
     "type": "Query",
     "abstractKey": null
@@ -242,20 +242,20 @@ return {
       (v0/*: any*/)
     ],
     "kind": "Operation",
-    "name": "stateMenuPlansQuery",
+    "name": "menuPlannerState_MenuPlansQuery",
     "selections": (v3/*: any*/)
   },
   "params": {
-    "cacheID": "cf5f9a0001bf5455edb719df880cb8fc",
+    "cacheID": "ff6cec168def993b46b75eaffd1e0b69",
     "id": null,
     "metadata": {},
-    "name": "stateMenuPlansQuery",
+    "name": "menuPlannerState_MenuPlansQuery",
     "operationKind": "query",
-    "text": "query stateMenuPlansQuery(\n  $startDate: DateTime!\n  $endDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      thumbnail\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n        firstName\n        lastName\n      }\n      guests {\n        houseNumber\n        numberOfAdultGuests\n        numberOfChildGuests\n      }\n    }\n  }\n}\n"
+    "text": "query menuPlannerState_MenuPlansQuery(\n  $startDate: DateTime!\n  $endDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      thumbnail\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n        firstName\n        lastName\n      }\n      guests {\n        houseNumber\n        numberOfAdultGuests\n        numberOfChildGuests\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "9e9a330e0697fbcf8b03f8729eca11ab";
+(node as any).hash = "06d9c38391d03e46c330affb73a19e7f";
 
 export default node;

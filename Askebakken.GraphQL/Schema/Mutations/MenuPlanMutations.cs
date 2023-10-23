@@ -3,8 +3,10 @@ using Askebakken.GraphQL.Repository.Recipe;
 using Askebakken.GraphQL.Repository.Resident;
 using Askebakken.GraphQL.Schema.Errors;
 using Askebakken.GraphQL.Schema.Inputs;
+using Askebakken.GraphQL.Schema.Subscriptions.EventMessages;
 using Askebakken.GraphQL.Services;
 using HotChocolate.Authorization;
+using HotChocolate.Subscriptions;
 
 namespace Askebakken.GraphQL.Schema.Mutations;
 
@@ -188,7 +190,7 @@ public class MenuPlanMutations
     [Error<NotFoundError>]
     [Error<EventIsInThePastError>]
     [Authorize]
-    public async Task<MenuPlan> UpsertGuests(Guid menuPlanId, string houseNumber, int? numberOfChildGuests,
+    public async Task<MenuPlan> UpsertGuests([Service] ITopicEventSender eventSender, Guid menuPlanId, string houseNumber, int? numberOfChildGuests,
         int? numberOfAdultGuests, CancellationToken cancellationToken = default)
     {
         if (numberOfChildGuests is < 0) throw new InvalidInputError(nameof(numberOfChildGuests));
@@ -224,6 +226,10 @@ public class MenuPlanMutations
         menuPlan.Guests = menuPlan.Guests.Where(g => g.NumberOfAdultGuests + g.NumberOfChildGuests > 0).ToArray();
 
         var updated = await _menuPlanRepository.Update(menuPlan, cancellationToken);
+        
+        await eventSender.SendAsync(MenuPlanUpdatedEventMessage.Topic,
+            new MenuPlanUpdatedEventMessage(menuPlan), cancellationToken);
+        
         return updated;
     }
 }

@@ -8,7 +8,6 @@ README.md
 # Artifacts that will be built during image creation.
 
 yarn-error.log
-yarn.lock
 
 build
 node_modules

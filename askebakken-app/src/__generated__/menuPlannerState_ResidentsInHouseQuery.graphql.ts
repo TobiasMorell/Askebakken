@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<995b61eaeb15b33df73841de912b68f0>>
+ * @generated SignedSource<<0917a9bb47b12d8bb1d85838f7529738>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,10 +9,10 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type stateResidentsInHouseQuery$variables = {
+export type menuPlannerState_ResidentsInHouseQuery$variables = {
   houseNumber?: string | null;
 };
-export type stateResidentsInHouseQuery$data = {
+export type menuPlannerState_ResidentsInHouseQuery$data = {
   readonly residents: {
     readonly nodes: ReadonlyArray<{
       readonly child: boolean;
@@ -23,9 +23,9 @@ export type stateResidentsInHouseQuery$data = {
     }> | null;
   } | null;
 };
-export type stateResidentsInHouseQuery = {
-  response: stateResidentsInHouseQuery$data;
-  variables: stateResidentsInHouseQuery$variables;
+export type menuPlannerState_ResidentsInHouseQuery = {
+  response: menuPlannerState_ResidentsInHouseQuery$data;
+  variables: menuPlannerState_ResidentsInHouseQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -118,7 +118,7 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "stateResidentsInHouseQuery",
+    "name": "menuPlannerState_ResidentsInHouseQuery",
     "selections": (v1/*: any*/),
     "type": "Query",
     "abstractKey": null
@@ -127,20 +127,20 @@ return {
   "operation": {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
-    "name": "stateResidentsInHouseQuery",
+    "name": "menuPlannerState_ResidentsInHouseQuery",
     "selections": (v1/*: any*/)
   },
   "params": {
-    "cacheID": "e5ffe19759d6ad1ab0bc73cc4cf19af0",
+    "cacheID": "aa000fe2079f63479c52d5ed6c155c8b",
     "id": null,
     "metadata": {},
-    "name": "stateResidentsInHouseQuery",
+    "name": "menuPlannerState_ResidentsInHouseQuery",
     "operationKind": "query",
-    "text": "query stateResidentsInHouseQuery(\n  $houseNumber: String\n) {\n  residents(where: {houseNumber: {eq: $houseNumber}}) {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
+    "text": "query menuPlannerState_ResidentsInHouseQuery(\n  $houseNumber: String\n) {\n  residents(where: {houseNumber: {eq: $houseNumber}}) {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n      child\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "ba51729639f4577f31838092399f3179";
+(node as any).hash = "7adf4d252254c2bc2a5afd85f54ea453";
 
 export default node;

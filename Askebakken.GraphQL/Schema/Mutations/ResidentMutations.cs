@@ -142,7 +142,7 @@ public class ResidentMutations
     private string GetChangePasswordEmailTemplate(Resident user)
     {
         return $"""
-{EmailHeader(user)}
+                {EmailHeader(user)}
 
                 <p>Du har bedt om at få ændret dit kodeord til Askebakkens beboerportal.</p>
 
@@ -153,7 +153,7 @@ public class ResidentMutations
     private string GetPasswordResetEmailTemplate(Resident resident, string newPassword)
     {
         return $"""
-{EmailHeader(resident)}
+                {EmailHeader(resident)}
 
                 <p>Du har bedt om at få nulstillet dit kodeord til Askebakkens beboerportal.</p>
 
@@ -172,7 +172,7 @@ public class ResidentMutations
     private string GetResidentWelcomeEmailTemplate(Resident resident, string password, Resident creator)
     {
         return $"""
-{EmailHeader(resident)}
+                {EmailHeader(resident)}
                 <table border=0 cellspacing="0" cellpadding="0" style="background-color: white">
                     <tr>
                         <td>
