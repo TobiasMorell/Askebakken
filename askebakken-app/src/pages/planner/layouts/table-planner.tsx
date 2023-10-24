@@ -17,7 +17,10 @@ import { useRecoilValue } from "recoil";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
 import { Recipes } from "../components/recipes";
 import { WeekPlanGuests } from "../components/week-plan-guests";
-import { selectedDaysWithParticipantsState } from "../menu-planner-state";
+import {
+  loggedInUserHouse,
+  selectedDaysWithParticipantsState,
+} from "../menu-planner-state";
 import { Resident } from "../types";
 import {
   PlannerPageLayoutProviderProps,
@@ -25,10 +28,23 @@ import {
 } from "./planner-page-layout";
 
 import style from "./table-planner.module.css";
+import { devicePreferences } from "../../../app-state/device-preferences";
+import { useMemo } from "react";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
 export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
+  const userHouse = useRecoilValue(loggedInUserHouse);
+  const prefs = useRecoilValue(devicePreferences);
+
+  const housesToDisplay = useMemo(
+    () =>
+      prefs.appDisplayMode === "RESIDENT"
+        ? props.houses.filter((h) => h === userHouse)
+        : props.houses,
+    [prefs, props.houses, userHouse]
+  );
+
   return (
     <TableContainer margin={4}>
       <Table className={style.plannerTable} size="sm">
@@ -79,7 +95,7 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
           </Tr>
         </Thead>
         <Tbody>
-          {props.houses.map((house) => (
+          {housesToDisplay.map((house) => (
             <PlannerTableHouseEntry
               key={house}
               house={house}

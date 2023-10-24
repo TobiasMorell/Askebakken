@@ -2,7 +2,7 @@ import { useRecoilValue } from "recoil";
 import { useMemo } from "react";
 import {
   selectedDaysWithParticipantsState,
-  residentsState,
+  allResidents,
   menuPlanUpdateSubscription,
 } from "./menu-planner-state";
 import { useAutomaticWeekChange } from "./hooks";
@@ -47,7 +47,7 @@ export default function PlannerPage() {
     menuPlanUpdatedSubscriptionConfig
   );
 
-  const residents = useRecoilValue(residentsState);
+  const residents = useRecoilValue(allResidents);
   const houses = useMemo(
     () => [...new Set(residents?.map((r) => r.houseNumber))].sort(),
     [residents]

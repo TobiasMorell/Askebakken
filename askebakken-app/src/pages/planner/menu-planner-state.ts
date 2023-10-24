@@ -3,7 +3,6 @@ import { graphQLSelector, graphQLSelectorFamily } from "recoil-relay";
 import { graphql } from "relay-runtime";
 import { RelayEnvironment } from "../../RelayEnvironment";
 import { getStartOfPlan, getEndOfPlan } from "./helpers";
-import { devicePreferences } from "../../app-state/device-preferences";
 import { menuPlannerState_ResidentsQuery$data } from "../../__generated__/menuPlannerState_ResidentsQuery.graphql";
 import {
   menuPlannerState_LoggedInUserHouseQuery$data,
@@ -38,7 +37,7 @@ export const selectedDaysState = selector<Date[]>({
   },
 });
 
-const allResidents = graphQLSelector({
+export const allResidents = graphQLSelector({
   key: "residents",
   environment: RelayEnvironment,
   query: graphql`
@@ -58,7 +57,7 @@ const allResidents = graphQLSelector({
   mapResponse: (r: menuPlannerState_ResidentsQuery$data) => r.residents?.nodes,
 });
 
-const loggedInUserHouse = graphQLSelector<
+export const loggedInUserHouse = graphQLSelector<
   menuPlannerState_LoggedInUserHouseQuery$variables,
   string
 >({
@@ -75,39 +74,6 @@ const loggedInUserHouse = graphQLSelector<
   variables: {},
   mapResponse: (r: menuPlannerState_LoggedInUserHouseQuery$data) =>
     r.me.houseNumber,
-});
-
-const residentsInHouse = graphQLSelectorFamily({
-  key: "residentsInHouse",
-  environment: RelayEnvironment,
-  query: graphql`
-    query menuPlannerState_ResidentsInHouseQuery($houseNumber: String) {
-      residents(where: { houseNumber: { eq: $houseNumber } }) {
-        nodes {
-          id
-          firstName
-          lastName
-          houseNumber
-          child
-        }
-      }
-    }
-  `,
-  variables: (houseNumber) => houseNumber,
-  mapResponse: (r: menuPlannerState_ResidentsQuery$data) => r.residents?.nodes,
-});
-
-export const residentsState = selector({
-  key: "residentsState",
-  get: ({ get }) => {
-    const devicePrefs = get(devicePreferences);
-    if (devicePrefs.appDisplayMode === "SYSTEM") {
-      return get(allResidents);
-    }
-
-    const userHouse = get(loggedInUserHouse);
-    return get(residentsInHouse({ houseNumber: userHouse }));
-  },
 });
 
 export const menuPlanParticipantsState = graphQLSelectorFamily({

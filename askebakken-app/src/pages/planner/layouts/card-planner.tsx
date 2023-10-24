@@ -7,7 +7,6 @@ import {
   Stack,
   Heading,
   Flex,
-  Divider,
   CardFooter,
   ButtonGroup,
   Avatar,
@@ -15,6 +14,8 @@ import {
   Image,
   Box,
   AspectRatio,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
 import { Resident } from "../types";
@@ -96,16 +97,17 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
                   </GridItem>
                 </SimpleGrid>
 
-                <Stack direction="row">
+                <Wrap>
                   {d.participants
                     .filter((g) => !!g)
                     .map((g) => (
-                      <CardAttendanceAvatar
-                        key={g!.id}
-                        resident={props.residentById?.get(g!.id)}
-                      />
+                      <WrapItem key={g!.id}>
+                        <CardAttendanceAvatar
+                          resident={props.residentById?.get(g!.id)}
+                        />
+                      </WrapItem>
                     ))}
-                </Stack>
+                </Wrap>
               </CardBody>
               <CardFooter>
                 <ButtonGroup spacing="2" justifyItems="end">
