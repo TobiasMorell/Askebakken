@@ -11,6 +11,7 @@ import { clearAuthToken, getAuthToken } from "./state/token";
 import { RecoilRoot } from "recoil";
 import TopBar from "./components/top-bar";
 import React from "react";
+import { CalendarIcon } from "@chakra-ui/icons";
 
 const PlannerPage = React.lazy(() => import("./pages/planner/planner-page"));
 
@@ -91,11 +92,11 @@ function Layout() {
             },
             {
               text: "Madhold",
-              href: "food-team",
+              href: "/food-team",
             },
             {
               text: "Opret Madplan",
-              href: "add-plan",
+              href: "/add-plan",
             },
           ]}
         />

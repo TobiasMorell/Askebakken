@@ -1,5 +1,6 @@
 import { CheckIcon } from "@chakra-ui/icons";
 import { IconButton, useToast } from "@chakra-ui/react";
+import { useMemo } from "react";
 import { useMutation } from "react-relay/hooks";
 import { graphql } from "relay-runtime";
 
@@ -21,17 +22,21 @@ export function ToggleAttendanceButton(props: {
   menuPlanId: string | undefined;
   participantIds: string[];
 }) {
+  const { participantIds, userId } = props;
   const toast = useToast();
 
   const [toggle, loading] = useMutation(toggleAttendanceMutation);
 
-  const attendsPlan = props.participantIds.includes(props.userId);
+  const attendsPlan = useMemo(
+    () => participantIds.includes(userId),
+    [participantIds, userId]
+  );
 
   function toggleAttendance() {
     toggle({
       variables: {
         menuPlanId: props.menuPlanId,
-        userId: props.userId,
+        userId,
       },
       onCompleted: () => {
         toast({

@@ -16,31 +16,18 @@ import {
   AspectRatio,
   Wrap,
   WrapItem,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
+  PopoverHeader,
 } from "@chakra-ui/react";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
 import { Resident } from "../types";
 import { PlannerPageLayoutProviderProps } from "./planner-page-layout";
-import { graphql } from "react-relay";
-import { graphQLSelector } from "recoil-relay";
-import { RelayEnvironment } from "../../../RelayEnvironment";
 import { useRecoilValue } from "recoil";
-import { cardPlannerMeQuery$data } from "../../../__generated__/cardPlannerMeQuery.graphql";
-
-const loggedInUser = graphQLSelector({
-  query: graphql`
-    query cardPlannerMeQuery {
-      me {
-        id
-        firstName
-        lastName
-      }
-    }
-  `,
-  environment: RelayEnvironment,
-  key: "card-planner-me",
-  variables: {},
-  mapResponse: (r: cardPlannerMeQuery$data) => r.me,
-});
+import { loggedInUser } from "../../../app-state/logged-in-user";
 
 export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
   const me = useRecoilValue(loggedInUser);
@@ -62,7 +49,7 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
               <CardBody>
                 <Stack mt="6">
                   <Heading size="sm">
-                    {d.recipes.map((r) => r.name).join(" | ")}
+                    {d.recipes.filter(r => r.name.length > 0).map((r) => r.name).join(" | ")}
                   </Heading>
                   <Text color="gray.400">{`${d.date.getDanishWeekday()}, ${d.date.toLocaleDateString()}`}</Text>
                 </Stack>
@@ -74,40 +61,60 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
                 />
               </AspectRatio>
               <CardBody>
-                <SimpleGrid gap="8" columns={2}>
-                  <GridItem>
-                    <Flex gap="2">
-                      <Box>Voksne:</Box>
-                      <Box>
-                        {d.participants.filter((p) =>
-                          p ? !props.residentById?.get(p.id)?.child : false
-                        )?.length ?? 0}
-                      </Box>
-                    </Flex>
-                  </GridItem>
-                  <GridItem>
-                    <Flex gap="2">
-                      <Box>Børn:</Box>
-                      <Box>
-                        {d.participants.filter((p) =>
-                          p ? props.residentById?.get(p.id)?.child : false
-                        )?.length ?? 0}
-                      </Box>
-                    </Flex>
-                  </GridItem>
-                </SimpleGrid>
+                <Stack spacing={4}>
+                  <SimpleGrid gap="8" columns={2}>
+                    <GridItem>
+                      <Flex gap="2">
+                        <Box>Voksne:</Box>
+                        <Box>
+                          {d.participants.filter((p) =>
+                            p ? !props.residentById?.get(p.id)?.child : false
+                          )?.length ?? 0}
+                        </Box>
+                      </Flex>
+                    </GridItem>
+                    <GridItem>
+                      <Flex gap="2">
+                        <Box>Børn:</Box>
+                        <Box>
+                          {d.participants.filter((p) =>
+                            p ? props.residentById?.get(p.id)?.child : false
+                          )?.length ?? 0}
+                        </Box>
+                      </Flex>
+                    </GridItem>
+                  </SimpleGrid>
 
-                <Wrap>
-                  {d.participants
-                    .filter((g) => !!g)
-                    .map((g) => (
-                      <WrapItem key={g!.id}>
-                        <CardAttendanceAvatar
-                          resident={props.residentById?.get(g!.id)}
-                        />
-                      </WrapItem>
-                    ))}
-                </Wrap>
+                  <Box>
+                    <Text>Tilmeldte:</Text>
+                    <Wrap>
+                      {d.participants
+                        .filter((g) => !!g)
+                        .map((g) => (
+                          <WrapItem key={g!.id}>
+                            <CardAttendanceAvatar
+                              resident={props.residentById?.get(g!.id)}
+                            />
+                          </WrapItem>
+                        ))}
+                    </Wrap>
+                  </Box>
+
+                  <Box>
+                    <Text>Kokke:</Text>
+                    <Wrap>
+                      {d.chefs
+                        .filter((g) => !!g)
+                        .map((g) => (
+                          <WrapItem key={g!.id}>
+                            <CardAttendanceAvatar
+                              resident={props.residentById?.get(g!.id)}
+                            />
+                          </WrapItem>
+                        ))}
+                    </Wrap>
+                  </Box>
+                </Stack>
               </CardBody>
               <CardFooter>
                 <ButtonGroup spacing="2" justifyItems="end">
@@ -133,9 +140,20 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
 
 function CardAttendanceAvatar(props: { resident?: Resident }) {
   return (
-    <Avatar
-      size="sm"
-      name={`${props.resident?.firstName} ${props.resident?.lastName}`}
-    />
+    <Popover placement="top">
+      <PopoverTrigger>
+        <Avatar
+          size="sm"
+          name={`${props.resident?.firstName} ${props.resident?.lastName}`}
+        />
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverHeader>
+          {props.resident?.firstName} {props.resident?.lastName}
+        </PopoverHeader>
+        <PopoverBody>Uldalsvej {props.resident?.houseNumber}</PopoverBody>
+      </PopoverContent>
+    </Popover>
   );
 }

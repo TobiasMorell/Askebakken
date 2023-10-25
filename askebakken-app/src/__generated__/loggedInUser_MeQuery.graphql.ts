@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<d0f06cab766eedb042e99784c2aea122>>
+ * @generated SignedSource<<665d2f9eec29b83aa4e332696dbe06b4>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,17 +9,17 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type cardPlannerMeQuery$variables = {};
-export type cardPlannerMeQuery$data = {
+export type loggedInUser_MeQuery$variables = {};
+export type loggedInUser_MeQuery$data = {
   readonly me: {
     readonly firstName: string | null;
     readonly id: any;
     readonly lastName: string | null;
   };
 };
-export type cardPlannerMeQuery = {
-  response: cardPlannerMeQuery$data;
-  variables: cardPlannerMeQuery$variables;
+export type loggedInUser_MeQuery = {
+  response: loggedInUser_MeQuery$data;
+  variables: loggedInUser_MeQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -62,7 +62,7 @@ return {
     "argumentDefinitions": [],
     "kind": "Fragment",
     "metadata": null,
-    "name": "cardPlannerMeQuery",
+    "name": "loggedInUser_MeQuery",
     "selections": (v0/*: any*/),
     "type": "Query",
     "abstractKey": null
@@ -71,20 +71,20 @@ return {
   "operation": {
     "argumentDefinitions": [],
     "kind": "Operation",
-    "name": "cardPlannerMeQuery",
+    "name": "loggedInUser_MeQuery",
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "475597cc1f94139c4fbd920b36e0e12d",
+    "cacheID": "5ad4f37f9a8554b7be25f813226180ad",
     "id": null,
     "metadata": {},
-    "name": "cardPlannerMeQuery",
+    "name": "loggedInUser_MeQuery",
     "operationKind": "query",
-    "text": "query cardPlannerMeQuery {\n  me {\n    id\n    firstName\n    lastName\n  }\n}\n"
+    "text": "query loggedInUser_MeQuery {\n  me {\n    id\n    firstName\n    lastName\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "35e03c9033a21a58094103d3c0cd9019";
+(node as any).hash = "0351c2b045807d888d20401dcc6247eb";
 
 export default node;

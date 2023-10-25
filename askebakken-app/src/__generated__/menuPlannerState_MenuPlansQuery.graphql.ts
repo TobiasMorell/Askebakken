@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<cac56561d1ed66a52c938e91b3e1cbb7>>
+ * @generated SignedSource<<31edb21414b4537df51e911a9d7830d6>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -16,6 +16,9 @@ export type menuPlannerState_MenuPlansQuery$variables = {
 export type menuPlannerState_MenuPlansQuery$data = {
   readonly menuPlan: {
     readonly nodes: ReadonlyArray<{
+      readonly chefs: ReadonlyArray<{
+        readonly id: any;
+      }>;
       readonly date: any;
       readonly guests: ReadonlyArray<{
         readonly houseNumber: string;
@@ -24,9 +27,7 @@ export type menuPlannerState_MenuPlansQuery$data = {
       }>;
       readonly id: any;
       readonly participants: ReadonlyArray<{
-        readonly firstName: string | null;
         readonly id: any;
-        readonly lastName: string | null;
       }>;
       readonly recipes: ReadonlyArray<{
         readonly id: any;
@@ -60,6 +61,9 @@ v2 = {
   "storageKey": null
 },
 v3 = [
+  (v2/*: any*/)
+],
+v4 = [
   {
     "alias": null,
     "args": [
@@ -164,23 +168,17 @@ v3 = [
             "kind": "LinkedField",
             "name": "participants",
             "plural": true,
-            "selections": [
-              (v2/*: any*/),
-              {
-                "alias": null,
-                "args": null,
-                "kind": "ScalarField",
-                "name": "firstName",
-                "storageKey": null
-              },
-              {
-                "alias": null,
-                "args": null,
-                "kind": "ScalarField",
-                "name": "lastName",
-                "storageKey": null
-              }
-            ],
+            "selections": (v3/*: any*/),
+            "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "concreteType": "Resident",
+            "kind": "LinkedField",
+            "name": "chefs",
+            "plural": true,
+            "selections": (v3/*: any*/),
             "storageKey": null
           },
           {
@@ -231,7 +229,7 @@ return {
     "kind": "Fragment",
     "metadata": null,
     "name": "menuPlannerState_MenuPlansQuery",
-    "selections": (v3/*: any*/),
+    "selections": (v4/*: any*/),
     "type": "Query",
     "abstractKey": null
   },
@@ -243,19 +241,19 @@ return {
     ],
     "kind": "Operation",
     "name": "menuPlannerState_MenuPlansQuery",
-    "selections": (v3/*: any*/)
+    "selections": (v4/*: any*/)
   },
   "params": {
-    "cacheID": "ff6cec168def993b46b75eaffd1e0b69",
+    "cacheID": "fb4643451c37a5307fb48133ac00b46b",
     "id": null,
     "metadata": {},
     "name": "menuPlannerState_MenuPlansQuery",
     "operationKind": "query",
-    "text": "query menuPlannerState_MenuPlansQuery(\n  $startDate: DateTime!\n  $endDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      thumbnail\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n        firstName\n        lastName\n      }\n      guests {\n        houseNumber\n        numberOfAdultGuests\n        numberOfChildGuests\n      }\n    }\n  }\n}\n"
+    "text": "query menuPlannerState_MenuPlansQuery(\n  $startDate: DateTime!\n  $endDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      thumbnail\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n      }\n      chefs {\n        id\n      }\n      guests {\n        houseNumber\n        numberOfAdultGuests\n        numberOfChildGuests\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "06d9c38391d03e46c330affb73a19e7f";
+(node as any).hash = "d2745029de9c9dd23531db37ae719e31";
 
 export default node;
