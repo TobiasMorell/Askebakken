@@ -22,14 +22,21 @@ import {
   PopoverArrow,
   PopoverBody,
   PopoverHeader,
+  useToast,
 } from "@chakra-ui/react";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
 import { Resident } from "../types";
 import { PlannerPageLayoutProviderProps } from "./planner-page-layout";
 import { useRecoilValue } from "recoil";
 import { loggedInUser } from "../../../app-state/logged-in-user";
+import { ChefHatIcon } from "../../../components/chef-hat-icon";
+import { ToggleCookingCardButton } from "../components/join-cooking-card-button";
+
+import style from "./card-planner.module.css";
+import { CSSProperties } from "react";
 
 export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
+  const toast = useToast();
   const me = useRecoilValue(loggedInUser);
 
   if (props.menuPlans.length === 0) {
@@ -49,7 +56,10 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
               <CardBody>
                 <Stack mt="6">
                   <Heading size="sm">
-                    {d.recipes.filter(r => r.name.length > 0).map((r) => r.name).join(" | ")}
+                    {d.recipes
+                      .filter((r) => r.name.length > 0)
+                      .map((r) => r.name)
+                      .join(" | ")}
                   </Heading>
                   <Text color="gray.400">{`${d.date.getDanishWeekday()}, ${d.date.toLocaleDateString()}`}</Text>
                 </Stack>
@@ -91,24 +101,14 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
                       {d.participants
                         .filter((g) => !!g)
                         .map((g) => (
-                          <WrapItem key={g!.id}>
+                          <WrapItem key={g!.id} alignItems="end">
                             <CardAttendanceAvatar
                               resident={props.residentById?.get(g!.id)}
-                            />
-                          </WrapItem>
-                        ))}
-                    </Wrap>
-                  </Box>
-
-                  <Box>
-                    <Text>Kokke:</Text>
-                    <Wrap>
-                      {d.chefs
-                        .filter((g) => !!g)
-                        .map((g) => (
-                          <WrapItem key={g!.id}>
-                            <CardAttendanceAvatar
-                              resident={props.residentById?.get(g!.id)}
+                              decoration={
+                                d.chefs.find((c) => c.id === g.id) ? (
+                                  <ChefHatIcon />
+                                ) : undefined
+                              }
                             />
                           </WrapItem>
                         ))}
@@ -128,6 +128,11 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
                     userId={me.id}
                     menuPlanId={d.id}
                   />
+                  <ToggleCookingCardButton
+                    date={d.date}
+                    userId={me.id}
+                    isChef={d.chefs.find((c) => c.id === me.id) != null}
+                  />
                 </ButtonGroup>
               </CardFooter>
             </Card>
@@ -138,14 +143,39 @@ export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
   );
 }
 
-function CardAttendanceAvatar(props: { resident?: Resident }) {
+function CardAttendanceAvatar(props: {
+  resident?: Resident;
+  decoration?: React.ReactNode;
+}) {
+  // Generate random number between 0.3 and 0.7
+  const popInAnimationDuration = Math.random() * 0.4 + 0.3;
+
   return (
     <Popover placement="top">
       <PopoverTrigger>
-        <Avatar
-          size="sm"
-          name={`${props.resident?.firstName} ${props.resident?.lastName}`}
-        />
+        <Box position="relative" marginTop={props.decoration ? "4" : undefined}>
+          <div
+            style={
+              {
+                "--animation-duration": "0.5s",
+                "--animation-delay": `${popInAnimationDuration}s`,
+              } as CSSProperties
+            }
+            className={[style.avatarDecoration, style.jingle].join(" ")}
+          >
+            {props.decoration}
+          </div>
+          <Avatar
+            size="sm"
+            name={`${props.resident?.firstName} ${props.resident?.lastName}`}
+            className={style.popIn}
+            style={
+              {
+                "--animation-duration": `${popInAnimationDuration}s`,
+              } as CSSProperties
+            }
+          />
+        </Box>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverArrow />
