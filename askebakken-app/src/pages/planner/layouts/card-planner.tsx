@@ -23,123 +23,132 @@ import {
   PopoverBody,
   PopoverHeader,
   useToast,
+  IconButton,
+  HStack,
 } from "@chakra-ui/react";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
 import { Resident } from "../types";
 import { PlannerPageLayoutProviderProps } from "./planner-page-layout";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { loggedInUser } from "../../../app-state/logged-in-user";
 import { ChefHatIcon } from "../../../components/chef-hat-icon";
 import { ToggleCookingCardButton } from "../components/join-cooking-card-button";
 
 import style from "./card-planner.module.css";
 import { CSSProperties } from "react";
+import { startDateState, endDateState } from "../menu-planner-state";
+import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { FormatTime } from "../../../components/format-time";
 
 export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
-  const toast = useToast();
+  return (
+    <Stack padding={{ base: 4, md: 8, lg: 16 }} spacing={8}>
+      {props.menuPlans.length === 0 ? (
+        <Center padding="8">
+          <Text color="gray.400">Der er ikke planlagt nogen dage endnu</Text>
+        </Center>
+      ) : (
+        <CardPlannerGardGrid {...props} />
+      )}
+
+      <Center>
+        <WeekNavigation />
+      </Center>
+    </Stack>
+  );
+}
+
+function CardPlannerGardGrid(props: PlannerPageLayoutProviderProps) {
   const me = useRecoilValue(loggedInUser);
 
-  if (props.menuPlans.length === 0) {
-    return (
-      <Center padding="8">
-        <Text color="gray.400">Der er ikke planlagt nogen dage endnu</Text>
-      </Center>
-    );
-  }
-
   return (
-    <Box padding={{ base: 4, md: 8, lg: 16 }}>
-      <SimpleGrid spacing={10} columns={{ sm: 1, md: 2, xl: 4 }}>
-        {props.menuPlans.map((d) => (
-          <GridItem key={`name-${d.date.getDayOfYear()}`}>
-            <Card variant="elevated">
-              <CardBody>
-                <Stack mt="6">
-                  <Heading size="sm">
-                    {d.recipes
-                      .filter((r) => r.name.length > 0)
-                      .map((r) => r.name)
-                      .join(" | ")}
-                  </Heading>
-                  <Text color="gray.400">{`${d.date.getDanishWeekday()}, ${d.date.toLocaleDateString()}`}</Text>
-                </Stack>
-              </CardBody>
-              <AspectRatio ratio={1}>
-                <Image
-                  src={d.thumbnail ?? ""}
-                  alt="Der mangler et billede her"
-                />
-              </AspectRatio>
-              <CardBody>
-                <Stack spacing={4}>
-                  <SimpleGrid gap="8" columns={2}>
-                    <GridItem>
-                      <Flex gap="2">
-                        <Box>Voksne:</Box>
-                        <Box>
-                          {d.participants.filter((p) =>
-                            p ? !props.residentById?.get(p.id)?.child : false
-                          )?.length ?? 0}
-                        </Box>
-                      </Flex>
-                    </GridItem>
-                    <GridItem>
-                      <Flex gap="2">
-                        <Box>Børn:</Box>
-                        <Box>
-                          {d.participants.filter((p) =>
-                            p ? props.residentById?.get(p.id)?.child : false
-                          )?.length ?? 0}
-                        </Box>
-                      </Flex>
-                    </GridItem>
-                  </SimpleGrid>
+    <SimpleGrid spacing={10} columns={{ sm: 1, md: 2, xl: 4 }}>
+      {props.menuPlans.map((d) => (
+        <GridItem key={`name-${d.date.getDayOfYear()}`}>
+          <Card variant="elevated">
+            <CardBody>
+              <Stack mt="6">
+                <Heading size="sm">
+                  {d.recipes
+                    .filter((r) => r.name.length > 0)
+                    .map((r) => r.name)
+                    .join(" | ")}
+                </Heading>
+                <Text color="gray.400">{`${d.date.getDanishWeekday()}, ${d.date.toLocaleDateString()}`}</Text>
+              </Stack>
+            </CardBody>
+            <AspectRatio ratio={1}>
+              <Image src={d.thumbnail ?? ""} alt="Der mangler et billede her" />
+            </AspectRatio>
+            <CardBody>
+              <Stack spacing={4}>
+                <SimpleGrid gap="8" columns={2}>
+                  <GridItem>
+                    <Flex gap="2">
+                      <Box>Voksne:</Box>
+                      <Box>
+                        {d.participants.filter((p) =>
+                          p ? !props.residentById?.get(p.id)?.child : false
+                        )?.length ?? 0}
+                      </Box>
+                    </Flex>
+                  </GridItem>
+                  <GridItem>
+                    <Flex gap="2">
+                      <Box>Børn:</Box>
+                      <Box>
+                        {d.participants.filter((p) =>
+                          p ? props.residentById?.get(p.id)?.child : false
+                        )?.length ?? 0}
+                      </Box>
+                    </Flex>
+                  </GridItem>
+                </SimpleGrid>
 
-                  <Box>
-                    <Text>Tilmeldte:</Text>
-                    <Wrap>
-                      {d.participants
-                        .filter((g) => !!g)
-                        .map((g) => (
-                          <WrapItem key={g!.id} alignItems="end">
-                            <CardAttendanceAvatar
-                              resident={props.residentById?.get(g!.id)}
-                              decoration={
-                                d.chefs.find((c) => c.id === g.id) ? (
-                                  <ChefHatIcon />
-                                ) : undefined
-                              }
-                            />
-                          </WrapItem>
-                        ))}
-                    </Wrap>
-                  </Box>
-                </Stack>
-              </CardBody>
-              <CardFooter>
-                <ButtonGroup spacing="2" justifyItems="end">
-                  <ToggleAttendanceButton
-                    participantIds={
-                      d.participants
-                        .map((p) => p?.id)
-                        .filter((p) => !!p)
-                        .map((p) => p!) ?? []
-                    }
-                    userId={me.id}
-                    menuPlanId={d.id}
-                  />
-                  <ToggleCookingCardButton
-                    date={d.date}
-                    userId={me.id}
-                    isChef={d.chefs.find((c) => c.id === me.id) != null}
-                  />
-                </ButtonGroup>
-              </CardFooter>
-            </Card>
-          </GridItem>
-        ))}
-      </SimpleGrid>
-    </Box>
+                <Box>
+                  <Text>Tilmeldte:</Text>
+                  <Wrap>
+                    {d.participants
+                      .filter((g) => !!g)
+                      .map((g) => (
+                        <WrapItem key={g!.id} alignItems="end">
+                          <CardAttendanceAvatar
+                            resident={props.residentById?.get(g!.id)}
+                            decoration={
+                              d.chefs.find((c) => c.id === g.id) ? (
+                                <ChefHatIcon />
+                              ) : undefined
+                            }
+                          />
+                        </WrapItem>
+                      ))}
+                  </Wrap>
+                </Box>
+              </Stack>
+            </CardBody>
+            <CardFooter>
+              <ButtonGroup spacing="2" justifyItems="end">
+                <ToggleAttendanceButton
+                  participantIds={
+                    d.participants
+                      .map((p) => p?.id)
+                      .filter((p) => !!p)
+                      .map((p) => p!) ?? []
+                  }
+                  userId={me.id}
+                  menuPlanId={d.id}
+                />
+                <ToggleCookingCardButton
+                  date={d.date}
+                  userId={me.id}
+                  isChef={d.chefs.find((c) => c.id === me.id) != null}
+                />
+              </ButtonGroup>
+            </CardFooter>
+          </Card>
+        </GridItem>
+      ))}
+    </SimpleGrid>
   );
 }
 
@@ -185,5 +194,42 @@ function CardAttendanceAvatar(props: {
         <PopoverBody>Uldalsvej {props.resident?.houseNumber}</PopoverBody>
       </PopoverContent>
     </Popover>
+  );
+}
+
+function WeekNavigation() {
+  const [startDate, setStartDate] = useRecoilState(startDateState);
+  const [endDate, setEndDate] = useRecoilState(endDateState);
+
+  function nextWeek() {
+    setStartDate(startDate.addDays(7));
+    setEndDate(endDate.addDays(7));
+    window.scrollTo(0, 0);
+  }
+
+  function previousWeek() {
+    setStartDate(startDate.addDays(-7));
+    setEndDate(endDate.addDays(-7));
+    window.scrollTo(0, 0);
+  }
+
+  return (
+    <HStack spacing={4}>
+      <IconButton
+        onClick={previousWeek}
+        icon={<ChevronLeftIcon />}
+        aria-label="Forrige uge"
+      />
+      <HStack spacing={2}>
+        <FormatTime value={startDate} />
+        <Text>-</Text>
+        <FormatTime value={endDate} />
+      </HStack>
+      <IconButton
+        onClick={nextWeek}
+        icon={<ChevronRightIcon />}
+        aria-label="Næste uge"
+      />
+    </HStack>
   );
 }

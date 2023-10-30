@@ -5,7 +5,5 @@ export function getWeekDates(weekNumber: number, year: number): Date[] {
     firstDay.setDate(firstDay.getDate() - firstDay.getDay() + 1);
   }
 
-  return Array.enumerate({ to: 5 }).map(
-    (i) => new Date(firstDay.getTime() + i * 24 * 60 * 60 * 1000)
-  );
+  return Array.enumerate({ to: 5 }).map((i) => firstDay.addDays(i));
 }

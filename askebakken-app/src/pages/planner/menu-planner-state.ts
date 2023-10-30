@@ -23,16 +23,14 @@ export const endDateState = atom({
 export const selectedDaysState = selector<Date[]>({
   key: "selectedDays",
   get: ({ get }) => {
-    const startDate = useRecoilValue(startDateState);
-    const endDate = useRecoilValue(endDateState);
+    const startDate = get(startDateState);
+    const endDate = get(endDateState);
 
     const diff = Math.abs(endDate.getTime() - startDate.getTime());
     const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
 
     return [...Array(diffDays + 1).keys()].map((i) => {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + i);
-      return d;
+      return startDate.addDays(i);
     });
   },
 });

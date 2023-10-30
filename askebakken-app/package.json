@@ -7,7 +7,8 @@
     "dev": "vite --host",
     "build": "relay-compiler --validate && tsc && vite build",
     "preview": "vite preview",
-    "relay": "relay-compiler"
+    "relay": "relay-compiler",
+    "test": "vitest"
   },
   "browserslist": [
     "defaults"
@@ -41,6 +42,7 @@
     "terser": "^5.17.1",
     "typescript": "^4.9.3",
     "vite": "^4.2.0",
-    "vite-plugin-relay": "2.0.0"
+    "vite-plugin-relay": "2.0.0",
+    "vitest": "^0.34.6"
   }
 }
