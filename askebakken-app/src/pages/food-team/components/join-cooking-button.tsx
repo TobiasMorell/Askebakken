@@ -12,7 +12,7 @@ export function JoinCookingButton(props: {
   date: Date;
   menuPlanId: string | undefined;
   onUserJoinedNewDate: (
-    user: Pick<Resident, "id" | "firstName" | "lastName">
+    user: Omit<Resident, 'child'>
   ) => void;
 }) {
   const toast = useToast();
@@ -33,6 +33,7 @@ export function JoinCookingButton(props: {
           id
           firstName
           lastName
+          houseNumber
         }
       }
     }

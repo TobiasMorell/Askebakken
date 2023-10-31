@@ -5,13 +5,17 @@ import {
   Stack,
   Text,
   Image,
-  Icon,
   HStack,
   GridItem,
   SimpleGrid,
+  Collapse,
+  Icon,
 } from "@chakra-ui/react";
 import { useRecoilState } from "recoil";
-import { devicePreferences } from "../../app-state/device-preferences";
+import {
+  DevicePreferences,
+  devicePreferences,
+} from "../../app-state/device-preferences";
 import { InfoOutlineIcon } from "@chakra-ui/icons";
 
 export default function SettingsPage() {
@@ -20,23 +24,6 @@ export default function SettingsPage() {
   return (
     <Box py={10} px={6}>
       <Stack spacing="8">
-        <Box>
-          <Text>Visning</Text>
-          <Center>
-            <Select
-              onChange={(evt) =>
-                setDevicePreferences({
-                  ...devicePrefs,
-                  appDisplayMode: evt.target.value as any,
-                })
-              }
-              value={devicePrefs.appDisplayMode}
-            >
-              <option value="SYSTEM">Fælleshus</option>
-              <option value="RESIDENT">Personlig</option>
-            </Select>
-          </Center>
-        </Box>
         <Box>
           <Text>Layout</Text>
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
@@ -113,6 +100,35 @@ export default function SettingsPage() {
             </GridItem>
           </SimpleGrid>
         </Box>
+
+        <Collapse in={devicePrefs.layout === "CLASSIC"}>
+          <Stack spacing={4}>
+            <Text>Visning</Text>
+            <Center>
+              <Select
+                onChange={(evt) =>
+                  setDevicePreferences({
+                    ...devicePrefs,
+                    appDisplayMode: evt.target
+                      .value as DevicePreferences["appDisplayMode"],
+                  })
+                }
+                value={devicePrefs.appDisplayMode}
+              >
+                <option value="SYSTEM">Fælleshus</option>
+                <option value="RESIDENT">Personlig</option>
+              </Select>
+            </Center>
+            <HStack spacing={2} align="baseline">
+              <InfoOutlineIcon color="blue.400" />
+              <Text textColor="gray">
+                Visning styrer hvad der skal vises på ugeplanen. Hvis du vælger
+                "Fælleshus" kan du se hvem der deltager fra hele bofællesskabet,
+                og hvis du vælger "Personlig" kan du kun se dit eget hus.
+              </Text>
+            </HStack>
+          </Stack>
+        </Collapse>
       </Stack>
     </Box>
   );

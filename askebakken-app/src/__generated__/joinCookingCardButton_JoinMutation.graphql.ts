@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<6491ac8afe8a3a31897928669db7367a>>
+ * @generated SignedSource<<0517e52c0e5430ccb456fa55f13a2db4>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,15 +9,14 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Mutation } from 'relay-runtime';
-export type joinCookingButtonMutation$variables = {
+export type joinCookingCardButton_JoinMutation$variables = {
   date: any;
   residentId?: any | null;
 };
-export type joinCookingButtonMutation$data = {
+export type joinCookingCardButton_JoinMutation$data = {
   readonly signUpForCooking: {
     readonly chefs: ReadonlyArray<{
       readonly firstName: string | null;
-      readonly houseNumber: string;
       readonly id: any;
       readonly lastName: string | null;
     }>;
@@ -25,9 +24,9 @@ export type joinCookingButtonMutation$data = {
     readonly id: any;
   };
 };
-export type joinCookingButtonMutation = {
-  response: joinCookingButtonMutation$data;
-  variables: joinCookingButtonMutation$variables;
+export type joinCookingCardButton_JoinMutation = {
+  response: joinCookingCardButton_JoinMutation$data;
+  variables: joinCookingCardButton_JoinMutation$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -100,13 +99,6 @@ v2 = [
             "kind": "ScalarField",
             "name": "lastName",
             "storageKey": null
-          },
-          {
-            "alias": null,
-            "args": null,
-            "kind": "ScalarField",
-            "name": "houseNumber",
-            "storageKey": null
           }
         ],
         "storageKey": null
@@ -120,7 +112,7 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "joinCookingButtonMutation",
+    "name": "joinCookingCardButton_JoinMutation",
     "selections": (v2/*: any*/),
     "type": "Mutation",
     "abstractKey": null
@@ -129,20 +121,20 @@ return {
   "operation": {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
-    "name": "joinCookingButtonMutation",
+    "name": "joinCookingCardButton_JoinMutation",
     "selections": (v2/*: any*/)
   },
   "params": {
-    "cacheID": "016f708f27f2235b367a9a229e40e774",
+    "cacheID": "4c99a282cc598e15fd4148a024c7c82d",
     "id": null,
     "metadata": {},
-    "name": "joinCookingButtonMutation",
+    "name": "joinCookingCardButton_JoinMutation",
     "operationKind": "mutation",
-    "text": "mutation joinCookingButtonMutation(\n  $date: DateTime!\n  $residentId: UUID\n) {\n  signUpForCooking(date: $date, residentId: $residentId) {\n    id\n    date\n    chefs {\n      id\n      firstName\n      lastName\n      houseNumber\n    }\n  }\n}\n"
+    "text": "mutation joinCookingCardButton_JoinMutation(\n  $date: DateTime!\n  $residentId: UUID\n) {\n  signUpForCooking(date: $date, residentId: $residentId) {\n    id\n    date\n    chefs {\n      id\n      firstName\n      lastName\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "8c3b007868a59236c1a919d4f3169026";
+(node as any).hash = "8e7b5369fe5ada81dce4546f9d1b445c";
 
 export default node;

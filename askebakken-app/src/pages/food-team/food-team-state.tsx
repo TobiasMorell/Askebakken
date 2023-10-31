@@ -27,6 +27,7 @@ export const menuPlanChefState = graphQLSelectorFamily({
             id
             firstName
             lastName
+            houseNumber
           }
         }
       }

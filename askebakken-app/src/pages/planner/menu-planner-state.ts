@@ -3,7 +3,6 @@ import { graphQLSelector, graphQLSelectorFamily } from "recoil-relay";
 import { graphql } from "relay-runtime";
 import { RelayEnvironment } from "../../RelayEnvironment";
 import { getStartOfPlan, getEndOfPlan } from "./helpers";
-import { devicePreferences } from "../../app-state/device-preferences";
 import { menuPlannerState_ResidentsQuery$data } from "../../__generated__/menuPlannerState_ResidentsQuery.graphql";
 import {
   menuPlannerState_LoggedInUserHouseQuery$data,
@@ -24,21 +23,19 @@ export const endDateState = atom({
 export const selectedDaysState = selector<Date[]>({
   key: "selectedDays",
   get: ({ get }) => {
-    const startDate = useRecoilValue(startDateState);
-    const endDate = useRecoilValue(endDateState);
+    const startDate = get(startDateState);
+    const endDate = get(endDateState);
 
     const diff = Math.abs(endDate.getTime() - startDate.getTime());
     const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
 
     return [...Array(diffDays + 1).keys()].map((i) => {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + i);
-      return d;
+      return startDate.addDays(i);
     });
   },
 });
 
-const allResidents = graphQLSelector({
+export const allResidents = graphQLSelector({
   key: "residents",
   environment: RelayEnvironment,
   query: graphql`
@@ -58,7 +55,7 @@ const allResidents = graphQLSelector({
   mapResponse: (r: menuPlannerState_ResidentsQuery$data) => r.residents?.nodes,
 });
 
-const loggedInUserHouse = graphQLSelector<
+export const loggedInUserHouse = graphQLSelector<
   menuPlannerState_LoggedInUserHouseQuery$variables,
   string
 >({
@@ -75,39 +72,6 @@ const loggedInUserHouse = graphQLSelector<
   variables: {},
   mapResponse: (r: menuPlannerState_LoggedInUserHouseQuery$data) =>
     r.me.houseNumber,
-});
-
-const residentsInHouse = graphQLSelectorFamily({
-  key: "residentsInHouse",
-  environment: RelayEnvironment,
-  query: graphql`
-    query menuPlannerState_ResidentsInHouseQuery($houseNumber: String) {
-      residents(where: { houseNumber: { eq: $houseNumber } }) {
-        nodes {
-          id
-          firstName
-          lastName
-          houseNumber
-          child
-        }
-      }
-    }
-  `,
-  variables: (houseNumber) => houseNumber,
-  mapResponse: (r: menuPlannerState_ResidentsQuery$data) => r.residents?.nodes,
-});
-
-export const residentsState = selector({
-  key: "residentsState",
-  get: ({ get }) => {
-    const devicePrefs = get(devicePreferences);
-    if (devicePrefs.appDisplayMode === "SYSTEM") {
-      return get(allResidents);
-    }
-
-    const userHouse = get(loggedInUserHouse);
-    return get(residentsInHouse({ houseNumber: userHouse }));
-  },
 });
 
 export const menuPlanParticipantsState = graphQLSelectorFamily({
@@ -133,8 +97,9 @@ export const menuPlanParticipantsState = graphQLSelectorFamily({
           }
           participants {
             id
-            firstName
-            lastName
+          }
+          chefs {
+            id
           }
           guests {
             houseNumber

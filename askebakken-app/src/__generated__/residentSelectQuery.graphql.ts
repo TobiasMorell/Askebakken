@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<0540c70f2d0a5bafb4f20a2077353f6c>>
+ * @generated SignedSource<<d44a3c85d5f63f20832d808de924407f>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -13,8 +13,8 @@ export type residentSelectQuery$variables = {};
 export type residentSelectQuery$data = {
   readonly residents: {
     readonly nodes: ReadonlyArray<{
-      readonly child: boolean;
       readonly firstName: string | null;
+      readonly houseNumber: string;
       readonly id: any;
       readonly lastName: string | null;
     }> | null;
@@ -68,7 +68,7 @@ var v0 = [
             "alias": null,
             "args": null,
             "kind": "ScalarField",
-            "name": "child",
+            "name": "houseNumber",
             "storageKey": null
           }
         ],
@@ -96,16 +96,16 @@ return {
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "316120ac61abf376413d96eebb1ccdc2",
+    "cacheID": "f6f16c1e8a9ad76aa66cf8cb8a6ac502",
     "id": null,
     "metadata": {},
     "name": "residentSelectQuery",
     "operationKind": "query",
-    "text": "query residentSelectQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      child\n    }\n  }\n}\n"
+    "text": "query residentSelectQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "59740c4be128e6ad3790839b83ef9973";
+(node as any).hash = "8d3da7f3c006ca460364f55ccb603390";
 
 export default node;

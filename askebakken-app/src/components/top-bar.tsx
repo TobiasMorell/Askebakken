@@ -14,36 +14,19 @@ import {
   MenuItem,
   useDisclosure,
   useColorModeValue,
-  Stack,
   Spinner,
+  MenuItemProps,
 } from "@chakra-ui/react";
 import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { graphQLSelector } from "recoil-relay";
-import { RelayEnvironment } from "../RelayEnvironment";
-import { graphql } from "react-relay";
-import { topBarMeQuery$data } from "../__generated__/topBarMeQuery.graphql";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useRecoilValue } from "recoil";
 import { clearAuthToken } from "../state/token";
-
-const loggedInUser = graphQLSelector({
-  query: graphql`
-    query topBarMeQuery {
-      me {
-        firstName
-        lastName
-      }
-    }
-  `,
-  environment: RelayEnvironment,
-  key: "me",
-  variables: {},
-  mapResponse: (r: topBarMeQuery$data) => r.me,
-});
+import { loggedInUser } from "../app-state/logged-in-user";
 
 type TopBarLink = {
   text: string;
   href: string;
+  icon?: MenuItemProps["icon"];
 };
 
 function NavLink({ children, to }: { children: ReactNode; to: string }) {
@@ -66,7 +49,7 @@ function NavLink({ children, to }: { children: ReactNode; to: string }) {
 
 export default function TopBar(props: { menuItems: TopBarLink[] }) {
   const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onClose, onToggle, onOpen } = useDisclosure();
 
   function logOut() {
     clearAuthToken();
@@ -77,13 +60,27 @@ export default function TopBar(props: { menuItems: TopBarLink[] }) {
     <>
       <Box bg={useColorModeValue("green.100", "green.900")} px={4}>
         <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
-          <IconButton
-            size={"md"}
-            icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
-            aria-label={"Open Menu"}
-            display={{ md: "none" }}
-            onClick={isOpen ? onClose : onOpen}
-          />
+          <Menu
+            autoSelect={false}
+            onClose={onClose}
+            isOpen={isOpen}
+            onOpen={onOpen}
+          >
+            <MenuButton
+              aria-label={"Open Menu"}
+              display={{ md: "none" }}
+              onClick={onToggle}
+            >
+              {isOpen ? <CloseIcon /> : <HamburgerIcon />}
+            </MenuButton>
+            <Box display={{ md: "none" }}>
+              <MenuList>
+                {props.menuItems.map((link) => (
+                  <HandheldMenuItem link={link} key={link.href} />
+                ))}
+              </MenuList>
+            </Box>
+          </Menu>
           <HStack spacing={8} alignItems={"center"}>
             <Box>
               <Image height="48px" src="/asketrae.png" />
@@ -101,7 +98,7 @@ export default function TopBar(props: { menuItems: TopBarLink[] }) {
             </HStack>
           </HStack>
           <Flex alignItems={"center"}>
-            <Menu>
+            <Menu autoSelect={false}>
               <MenuButton
                 as={Button}
                 rounded={"full"}
@@ -115,28 +112,16 @@ export default function TopBar(props: { menuItems: TopBarLink[] }) {
               </MenuButton>
               <MenuList>
                 <RouterLink to="/profile">
-                  <MenuItem>Profil</MenuItem>
+                  <MenuItem padding={4}>Profil</MenuItem>
                 </RouterLink>
                 <RouterLink to="/settings">
-                  <MenuItem>Indstillinger</MenuItem>
+                  <MenuItem padding={4}>Indstillinger</MenuItem>
                 </RouterLink>
-                <MenuItem onClick={logOut}>Log ud</MenuItem>
+                <MenuItem padding={4} onClick={logOut}>Log ud</MenuItem>
               </MenuList>
             </Menu>
           </Flex>
         </Flex>
-
-        {isOpen ? (
-          <Box pb={4} display={{ md: "none" }}>
-            <Stack as={"nav"} spacing={4}>
-              {props.menuItems.map((link) => (
-                <NavLink key={link.href} to={link.href}>
-                  {link.text}
-                </NavLink>
-              ))}
-            </Stack>
-          </Box>
-        ) : null}
       </Box>
     </>
   );
@@ -147,5 +132,19 @@ function UserAvatar() {
 
   return (
     <Avatar size={"md"} name={`${me.firstName} ${me.lastName}`} src={""} />
+  );
+}
+
+function HandheldMenuItem(props: { link: TopBarLink }) {
+  const { link } = props;
+  const location = useLocation();
+  const selected = location.pathname === link.href;
+
+  return (
+    <RouterLink to={link.href}>
+      <MenuItem bg={selected ? "gray.200" : undefined} icon={link.icon} padding={4}>
+        {link.text}
+      </MenuItem>
+    </RouterLink>
   );
 }

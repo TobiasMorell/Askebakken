@@ -19,6 +19,7 @@ import { PasswordInput } from "../../components/password-input";
 import { KeyboardEventHandler, useRef, useState } from "react";
 import { useMutation } from "react-relay";
 import { profilePageChangePasswordMutation } from "../../__generated__/profilePageChangePasswordMutation.graphql";
+import { FormatTime } from "../../components/format-time";
 
 const loggedInUser = graphQLSelector({
   query: graphql`
@@ -61,8 +62,8 @@ export default function ProfilePage() {
                     {me.firstName} {me.lastName}
                   </Heading>
                   <Text color="gray">{me.username}</Text>
-                  <Text>{me.houseNumber}</Text>
-                  <Text>{new Date(me.birthDate).toLocaleDateString()}</Text>
+                  <Text>Uldalsvej {me.houseNumber}</Text>
+                  <Text><FormatTime value={new Date(me.birthDate)} /></Text>
                 </Stack>
               </Box>
             </Stack>

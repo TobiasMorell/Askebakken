@@ -3,6 +3,7 @@ export type Resident = Readonly<{
   firstName: string | null;
   lastName: string | null;
   child: boolean | null;
+  houseNumber: string;
 }>;
 
 export type Recipe = Readonly<{

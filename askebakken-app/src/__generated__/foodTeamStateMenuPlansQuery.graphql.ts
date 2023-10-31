@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<ee31d159a4cbce8fc0e7d456184e449e>>
+ * @generated SignedSource<<931a8ddf939f26736db5da00f37ed6e1>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -18,6 +18,7 @@ export type foodTeamStateMenuPlansQuery$data = {
     readonly nodes: ReadonlyArray<{
       readonly chefs: ReadonlyArray<{
         readonly firstName: string | null;
+        readonly houseNumber: string;
         readonly id: any;
         readonly lastName: string | null;
       }>;
@@ -166,6 +167,13 @@ v3 = [
                 "kind": "ScalarField",
                 "name": "lastName",
                 "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "houseNumber",
+                "storageKey": null
               }
             ],
             "storageKey": null
@@ -201,16 +209,16 @@ return {
     "selections": (v3/*: any*/)
   },
   "params": {
-    "cacheID": "014f49bd8803e0e3d3f38476f9b381b2",
+    "cacheID": "73b7a6f44076f4a6ee09b318776f41cd",
     "id": null,
     "metadata": {},
     "name": "foodTeamStateMenuPlansQuery",
     "operationKind": "query",
-    "text": "query foodTeamStateMenuPlansQuery(\n  $startDate: DateTime\n  $endDate: DateTime\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      chefs {\n        id\n        firstName\n        lastName\n      }\n    }\n  }\n}\n"
+    "text": "query foodTeamStateMenuPlansQuery(\n  $startDate: DateTime\n  $endDate: DateTime\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      recipes {\n        id\n        name\n      }\n      chefs {\n        id\n        firstName\n        lastName\n        houseNumber\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "f4b64a7e9b0e1faa35cd5fb81023f531";
+(node as any).hash = "ce05e98722d3971d0b9ba4d2d57d25c8";
 
 export default node;

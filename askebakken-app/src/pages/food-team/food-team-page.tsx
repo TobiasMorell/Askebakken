@@ -24,8 +24,8 @@ import { useRecoilStateLoadable } from "recoil";
 import { Recipe, Resident } from "../planner/types";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { RemoveFromCookingButton } from "./components/remove-from-cooking-button";
-import { JoinCookingButton } from "./components/join-cooking-button";
 import { menuPlanChefState } from "./food-team-state";
+import { JoinCookingButton } from "./components/join-cooking-button";
 
 type DayWithMenuPlanAndChefs = Readonly<{
   date: Date;
@@ -34,7 +34,7 @@ type DayWithMenuPlanAndChefs = Readonly<{
         date: Date;
         id: any;
         recipes: readonly Recipe[];
-        chefs: readonly Omit<Resident, 'child'>[];
+        chefs: readonly Omit<Resident, "child">[];
       }
     | undefined;
 }>;
@@ -49,7 +49,10 @@ export default function FoodTeamPage() {
   return (
     <Box padding={8}>
       <Stack spacing="8">
-        <Grid templateColumns={`repeat(${NUMBER_OF_WEEKS_IN_GRID}, 1fr)`} gap={8}>
+        <Grid
+          templateColumns={`repeat(${NUMBER_OF_WEEKS_IN_GRID}, 1fr)`}
+          gap={8}
+        >
           {Array.enumerate({
             from: selectedStartingWeek,
             to: selectedStartingWeek + NUMBER_OF_WEEKS_IN_GRID,
@@ -110,7 +113,7 @@ function FoodTeamWeekPlan(props: { week: number }) {
     })
   );
 
-  function addNewPlanWithUserAsChef(date: Date, user: Omit<Resident, 'child'>) {
+  function addNewPlanWithUserAsChef(date: Date, user: Omit<Resident, "child">) {
     const newPlan = {
       chefs: [user],
       date: date,
@@ -170,10 +173,7 @@ function FoodTeamWeekPlan(props: { week: number }) {
 function FoodTeamWeekPlanTable(props: {
   daysInWeek: DayWithMenuPlanAndChefs[];
   week: number;
-  onUserSignedUpToNewPlan: (
-    date: Date,
-    user: Pick<Resident, "id" | "firstName" | "lastName">
-  ) => void;
+  onUserSignedUpToNewPlan: (date: Date, user: Omit<Resident, "child">) => void;
   onUserRemovedFromNewPlan: (date: Date, userId: string) => void;
 }) {
   return (

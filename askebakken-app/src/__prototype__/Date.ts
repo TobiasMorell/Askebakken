@@ -4,8 +4,15 @@ declare global {
     getDayOfYear(): number;
     toDateOnlyISOString(): string;
     getDanishWeekday(): string;
+    addDays(days: number): Date;
   }
 }
+
+Date.prototype.addDays = function (days: number): Date {
+  const date = new Date(this.valueOf());
+  date.setDate(date.getDate() + days);
+  return date;
+};
 
 // Returns the ISO week of the date.
 Date.prototype.getWeek = function () {

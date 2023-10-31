@@ -16,7 +16,7 @@ const residentsQuery = graphql`
         id
         firstName
         lastName
-        child
+        houseNumber
       }
     }
   }
@@ -24,7 +24,7 @@ const residentsQuery = graphql`
 
 const residentsState = graphQLSelector<
   residentSelectQuery$variables,
-  readonly Resident[]
+  readonly Omit<Resident, "child">[]
 >({
   key: "residentSelectQuery",
   environment: RelayEnvironment,
