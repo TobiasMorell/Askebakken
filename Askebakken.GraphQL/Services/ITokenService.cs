@@ -24,7 +24,7 @@ public class JwtTokenService : ITokenService
     public string GetToken(Resident user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenKey = Encoding.UTF8.GetBytes(_options.Secret!);
+        var tokenKey = Encoding.UTF8.GetBytes(_options.Secret);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
@@ -32,7 +32,7 @@ public class JwtTokenService : ITokenService
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             }.Concat(user.Roles.Select(r => new Claim(ClaimTypes.Role, r)))),
-            //Expires = DateTime.UtcNow.AddMinutes(options.ExpirationMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(_options.ExpirationMinutes),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature),
             Issuer = _options.Issuer,
             Audience = _options.Audience,
