@@ -7,7 +7,7 @@ using Askebakken.GraphQL.Services;
 using Askebakken.GraphQL.Tests.Fakes;
 using HotChocolate.Subscriptions;
 
-namespace Askebakken.GraphQL.Tests;
+namespace Askebakken.GraphQL.Tests.GraphQL;
 
 public class MenuPlanMutationsTests
 {
@@ -15,6 +15,8 @@ public class MenuPlanMutationsTests
     private readonly FakeMenuPlanRepository _menuPlanRepository = new();
     private readonly FakeRecipeRepo _recipeRepo = new();
     private readonly FakeUserService _userService = new();
+    private readonly FakeImageGenerationService _imageGenerationService = new();
+    private readonly FakeBlobService _blobService = new();
     private readonly Mock<IMenuPlannerService> _menuPlannerService = new();
     private readonly Mock<ITopicEventSender> _topicEventSender = new();
 
@@ -23,7 +25,7 @@ public class MenuPlanMutationsTests
     public MenuPlanMutationsTests()
     {
         _mutations = new MenuPlanMutations(_menuPlanRepository, _residentRepository, _userService,
-            _menuPlannerService.Object);
+            _menuPlannerService.Object, _imageGenerationService, _blobService);
     }
 
     [Fact]
@@ -89,7 +91,7 @@ public class MenuPlanMutationsTests
             }));
         exception.Date.ShouldBe(date);
     }
-
+    
     [Fact]
     public async Task SignUpForCooking_throws_NotFoundError_when_ChefId_is_invalid()
     {
@@ -482,6 +484,215 @@ public class MenuPlanMutationsTests
             s => s.SendAsync(MenuPlanUpdatedEventMessage.Topic,
                 It.Is<MenuPlanUpdatedEventMessage>(m => m.UpdatedMenuPlan.Id == menuPlanId),
                 It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GenerateThumbnail_throws_NotFoundError_if_menu_plan_does_not_exist()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var request = new GenerateMenuPlanThumbnails(menuPlanId);
+
+        // Act and assert
+        await Should.ThrowAsync<NotFoundError>(() => _mutations.GenerateThumbnail(
+            _recipeRepo, new FakeMenuPlanThumbnailCandidateRepository(), request));
+    }
+
+    [Fact]
+    public async Task GenerateThumbnail_returns_cached_images_if_exists()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var fakeThumbnailRepo = new FakeMenuPlanThumbnailCandidateRepository();
+        var extImages = new MenuPlanThumbnailCandidates()
+        {
+            MenuPlanId = menuPlanId,
+            CandidateThumbnailUrls = new[]
+            {
+                "https://fake.test/1.jpg"
+            }
+        };
+        fakeThumbnailRepo.AddMockData(extImages);
+        var request = new GenerateMenuPlanThumbnails(menuPlanId);
+
+        // Act
+        var result = await _mutations.GenerateThumbnail(
+            _recipeRepo, fakeThumbnailRepo, request);
+
+        // Assert
+        result.ThumbnailUrls.ShouldBeEquivalentTo(extImages.CandidateThumbnailUrls);
+        _imageGenerationService.Requests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GenerateThumbnail_queries_image_generation_service_with_main_recipe_name_if_available()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var fakeThumbnailRepo = new FakeMenuPlanThumbnailCandidateRepository();
+
+        var recipe = await _recipeRepo.CreateRecipeAsync(new CreateRecipeInput()
+        {
+            Name = "Testsagna",
+            Category = "Main"
+        });
+        _menuPlanRepository.AddMockData(new MenuPlan()
+        {
+            Id = menuPlanId,
+            RecipeIds = new List<Guid>()
+            {
+                recipe.Id
+            }
+        });
+
+        var request = new GenerateMenuPlanThumbnails(menuPlanId);
+
+        // Act
+        await _mutations.GenerateThumbnail(
+            _recipeRepo, fakeThumbnailRepo, request);
+
+        // Assert
+        _imageGenerationService.Requests.ShouldHaveSingleItem().Text.ShouldBe("Testsagna");
+    }
+
+    [Fact]
+    public async Task
+        GenerateThumbnail_queries_image_generation_service_with_first_recipe_name_if_no_main_is_specified()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var fakeThumbnailRepo = new FakeMenuPlanThumbnailCandidateRepository();
+
+        var recipe = await _recipeRepo.CreateRecipeAsync(new CreateRecipeInput()
+        {
+            Name = "Strawberries",
+            Category = "Dessert"
+        });
+
+        _menuPlanRepository.AddMockData(new MenuPlan()
+        {
+            Id = menuPlanId,
+            RecipeIds = new List<Guid>()
+            {
+                recipe.Id
+            }
+        });
+
+        var request = new GenerateMenuPlanThumbnails(menuPlanId);
+
+        // Act
+        await _mutations.GenerateThumbnail(
+            _recipeRepo, fakeThumbnailRepo, request);
+
+        // Assert
+        _imageGenerationService.Requests.ShouldHaveSingleItem().Text.ShouldBe("Strawberries");
+    }
+
+    [Fact]
+    public async Task
+        GenerateThumbnail_queries_image_generation_service_with_first_recipe_non_empty_name_if_main_is_empty()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var fakeThumbnailRepo = new FakeMenuPlanThumbnailCandidateRepository();
+
+        var recipe = await _recipeRepo.CreateRecipeAsync(new CreateRecipeInput()
+        {
+            Name = "",
+            Category = "Main"
+        });
+        var recipe2 = await _recipeRepo.CreateRecipeAsync(new CreateRecipeInput()
+        {
+            Name = "Rice",
+            Category = "Side"
+        });
+
+        _menuPlanRepository.AddMockData(new MenuPlan()
+        {
+            Id = menuPlanId,
+            RecipeIds = new List<Guid>()
+            {
+                recipe.Id,
+                recipe2.Id
+            }
+        });
+
+        var request = new GenerateMenuPlanThumbnails(menuPlanId);
+
+        // Act
+        await _mutations.GenerateThumbnail(
+            _recipeRepo, fakeThumbnailRepo, request);
+
+        // Assert
+        _imageGenerationService.Requests.ShouldHaveSingleItem().Text.ShouldBe("Rice");
+    }
+
+    [Fact]
+    public async Task GenerateThumbnail_caches_generated_images_for_menu_plan()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var fakeThumbnailRepo = new FakeMenuPlanThumbnailCandidateRepository();
+
+        var recipe = await _recipeRepo.CreateRecipeAsync(new CreateRecipeInput()
+        {
+            Name = "Pasta",
+            Category = "Main"
+        });
+
+        _menuPlanRepository.AddMockData(new MenuPlan()
+        {
+            Id = menuPlanId,
+            RecipeIds = new List<Guid>()
+            {
+                recipe.Id
+            }
+        });
+
+        var request = new GenerateMenuPlanThumbnails(menuPlanId);
+
+        // Act
+        var result = await _mutations.GenerateThumbnail(
+            _recipeRepo, fakeThumbnailRepo, request);
+
+        // Assert
+        var cached = await fakeThumbnailRepo.GetMenuPlanThumbnailCandidatesAsync(menuPlanId);
+        cached.ShouldNotBeNull();
+        cached.CandidateThumbnailUrls.ShouldBeEquivalentTo(result.ThumbnailUrls);
+    }
+
+    [Fact]
+    public async Task GenerateThumbnail_creates_blobs_for_generated_images()
+    {
+        // Arrange
+        var menuPlanId = Guid.NewGuid();
+        var fakeThumbnailRepo = new FakeMenuPlanThumbnailCandidateRepository();
+
+        var recipe = await _recipeRepo.CreateRecipeAsync(new CreateRecipeInput()
+        {
+            Name = "Pasta",
+            Category = "Main"
+        });
+
+        _menuPlanRepository.AddMockData(new MenuPlan()
+        {
+            Id = menuPlanId,
+            RecipeIds = new List<Guid>()
+            {
+                recipe.Id
+            }
+        });
+
+        var request = new GenerateMenuPlanThumbnails(menuPlanId);
+
+        // Act
+        var result = await _mutations.GenerateThumbnail(
+            _recipeRepo, fakeThumbnailRepo, request);
+
+        // Assert
+        foreach (var image in result.ThumbnailUrls)
+            _blobService.FileCreations.ShouldContain(b =>
+                b.FileName == Path.GetFileName(image) && b.DirectoryPath == Path.GetDirectoryName(image));
     }
 
     private static Resident GenerateSampleResident(Guid id, string houseNumber = "")

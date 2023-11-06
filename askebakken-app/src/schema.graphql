@@ -128,6 +128,9 @@ type Mutation {
     numberOfChildGuests: Int
     numberOfAdultGuests: Int
   ): MenuPlan!
+  generateThumbnail(
+    request: GenerateMenuPlanThumbnailsInput!
+  ): GenerateMenuPlanThumbnailResult!
   testEmail(template: String!): SuccessResult!
   createResident(resident: CreateResidentInput!): Resident!
   authenticate(authenticateInput: AuthenticateInput!): AuthenticateResult!
@@ -514,16 +517,6 @@ input IntOperationFilterInput {
   nlte: Int
 }
 
-type MenuPlanUpdatedEventMessage {
-  updatedMenuPlan: MenuPlan!
-}
-
-input ChangePasswordInput {
-  username: String!
-  oldPassword: String!
-  newPassword: String!
-}
-
 input ForgotPasswordInput {
   username: String!
 }
@@ -547,6 +540,16 @@ input CreateResidentInput {
 
 type SuccessResult {
   success: Boolean!
+}
+
+input GenerateMenuPlanThumbnailsInput {
+  menuPlanId: UUID!
+  numberOfThumbnails: Int! = 9
+  thumbnailSize: Int! = 1024
+}
+
+type GenerateMenuPlanThumbnailResult {
+  thumbnailUrls: [String!]!
 }
 
 input MenuPlanAttendanceInput {
@@ -573,6 +576,16 @@ input CreateRecipeInput {
   name: String!
   category: String!
   thumbnail: String
+}
+
+input ChangePasswordInput {
+  username: String!
+  oldPassword: String!
+  newPassword: String!
+}
+
+type MenuPlanUpdatedEventMessage {
+  updatedMenuPlan: MenuPlan!
 }
 
 input CreateDayPlanInput {

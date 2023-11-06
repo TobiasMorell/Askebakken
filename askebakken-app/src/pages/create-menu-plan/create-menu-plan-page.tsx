@@ -1,9 +1,10 @@
-import { InfoOutlineIcon } from "@chakra-ui/icons";
+import { InfoOutlineIcon, Search2Icon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
   Center,
   HStack,
+  IconButton,
   Input,
   ListItem,
   Modal,
@@ -43,10 +44,11 @@ import { atom, selector, useRecoilState, useRecoilValue } from "recoil";
 import { graphql, useMutation } from "react-relay";
 import {
   CreateDayPlanInput,
-  CreateRecipeInput,
   createMenuPlanPageMutation$variables,
 } from "../../__generated__/createMenuPlanPageMutation.graphql";
 import { getWeekDates } from "../../utils/date-utils";
+import { GenerateThumbnail } from "./components/generate-thumbnail";
+import { FormatTime } from "../../components/format-time";
 
 type MenuPlanWithOptionalId = Omit<MenuPlan, "id"> & { id: string | undefined };
 
@@ -190,6 +192,7 @@ function WeekPlannerTable() {
   const menuPlans = useRecoilValue<MenuPlanWithOptionalId[]>(menuPlansInWeek);
 
   const [editedMenuPlans, setEditedMenuPlans] = useState(menuPlans);
+
   const addOrReplaceMenuPlan = useCallback(
     (plan: MenuPlanWithOptionalId) => {
       setEditedMenuPlans((prev) =>
@@ -394,13 +397,18 @@ function DayPlan(props: {
 
   const [recipes, setRecipes] = useState(recipeByCategory);
 
+  // TODO: These two useEffect calls cause an infinite loop, fix it!
+  useEffect(() => {
+    setRecipes(recipeByCategory);
+  }, [setRecipes, recipeByCategory]);
+
   useEffect(() => {
     props.onChange({
       id: props.menuPlan?.id,
       date: props.date,
       recipes: Array.from(recipes?.values() ?? []),
     });
-  }, [recipes, props.date, props.menuPlan?.id, props.onChange]);
+  }, [props.date, props.menuPlan?.id, props.onChange]);
 
   function addOrUpdateRecipe(
     category: string
@@ -420,7 +428,9 @@ function DayPlan(props: {
         <Td>
           <Stack>
             <Text>{props.date.getDanishWeekday()}</Text>
-            <Text>{props.date.toLocaleDateString()}</Text>
+            <Text>
+              <FormatTime value={props.date} />
+            </Text>
           </Stack>
         </Td>
         {["main", "veggies", "side", "sauce"].map((cat) => (
@@ -443,6 +453,10 @@ function DayPlan(props: {
               })
             }
           />
+
+          {props.menuPlan?.id && (
+            <GenerateThumbnail menuPlanId={props.menuPlan.id} />
+          )}
         </Td>
       </Tr>
 

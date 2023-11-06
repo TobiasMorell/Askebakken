@@ -1,12 +1,17 @@
 using Askebakken.GraphQL.Repository.MenuPlan;
+using Askebakken.GraphQL.Repository.MenuPlanThumbnailCandidates;
 using Askebakken.GraphQL.Repository.Recipe;
 using Askebakken.GraphQL.Repository.Resident;
 using Askebakken.GraphQL.Schema.Errors;
 using Askebakken.GraphQL.Schema.Inputs;
+using Askebakken.GraphQL.Schema.Results;
 using Askebakken.GraphQL.Schema.Subscriptions.EventMessages;
 using Askebakken.GraphQL.Services;
+using Askebakken.GraphQL.Services.BlobService;
+using Askebakken.GraphQL.Services.ImageGeneration;
 using HotChocolate.Authorization;
 using HotChocolate.Subscriptions;
+using Path = System.IO.Path;
 
 namespace Askebakken.GraphQL.Schema.Mutations;
 
@@ -17,16 +22,20 @@ public class MenuPlanMutations
     private readonly IResidentRepository _residentRepository;
     private readonly IUserService _userService;
     private readonly IMenuPlannerService _menuPlannerService;
+    private readonly IImageGenerationService _imageGenerationService;
+    private readonly IBlobService _blobService;
 
     public MenuPlanMutations(IMenuPlanRepository menuPlanRepository,
         IResidentRepository residentRepository,
         IUserService userService,
-        IMenuPlannerService menuPlannerService)
+        IMenuPlannerService menuPlannerService, IImageGenerationService imageGenerationService, IBlobService blobService)
     {
         _menuPlanRepository = menuPlanRepository;
         _residentRepository = residentRepository;
         _userService = userService;
         _menuPlannerService = menuPlannerService;
+        _imageGenerationService = imageGenerationService;
+        _blobService = blobService;
     }
 
     [Error<NotFoundError>]
@@ -38,7 +47,7 @@ public class MenuPlanMutations
     {
         var existingMenuPlan = await _menuPlanRepository.GetMenuPlanByDate(createMenuPlan.Date, cancellationToken);
         if (existingMenuPlan is not null) throw new MenuPlanAlreadyExistsError(createMenuPlan.Date);
-        
+
         var recipes = await recipeRepo.GetRecipesAsync(createMenuPlan.Recipes, cancellationToken);
         var foundRecipeIds = recipes.Select(r => r.Id).ToHashSet();
         var missingRecipeIds = createMenuPlan.Recipes.Where(r => !foundRecipeIds.Contains(r));
@@ -46,7 +55,9 @@ public class MenuPlanMutations
 
         var actual = new MenuPlan()
         {
-            RecipeIds = foundRecipeIds, ParticipantIds = Array.Empty<Guid>(), Date = createMenuPlan.Date.Date, Thumbnail = createMenuPlan.Thumbnail,
+            Id = Guid.NewGuid(),
+            RecipeIds = foundRecipeIds, ParticipantIds = Array.Empty<Guid>(), Date = createMenuPlan.Date.Date,
+            Thumbnail = createMenuPlan.Thumbnail
         };
 
         await _menuPlanRepository.CreateMenuPlan(actual, cancellationToken);
@@ -87,10 +98,11 @@ public class MenuPlanMutations
             else
             {
                 existingMenuPlan = await CreateMenuPlan(recipeRepo,
-                    new CreateMenuPlanInput() { Date = date, Recipes = recipeIds, Thumbnail = weekRecipes[i].Thumbnail },
+                    new CreateMenuPlanInput()
+                        { Date = date, Recipes = recipeIds, Thumbnail = weekRecipes[i].Thumbnail },
                     cancellationToken);
             }
-            
+
             results.Add(existingMenuPlan);
         }
 
@@ -99,7 +111,8 @@ public class MenuPlanMutations
 
     [Error<NotFoundError>]
     [Authorize]
-    public async Task<MenuPlan> ToggleAttendance(MenuPlanAttendanceInput input, CancellationToken cancellationToken = default)
+    public async Task<MenuPlan> ToggleAttendance(MenuPlanAttendanceInput input,
+        CancellationToken cancellationToken = default)
     {
         var menuPlan = await _menuPlanRepository.GetMenuPlanById(input.MenuPlanId, cancellationToken);
         if (menuPlan is null) throw new NotFoundError(nameof(MenuPlan), input.MenuPlanId);
@@ -111,13 +124,9 @@ public class MenuPlanMutations
 
         var participantIds = menuPlan.ParticipantIds.ToHashSet();
         if (participantIds.Contains(residentToAttend.Id))
-        {
             await _menuPlannerService.UnattendMenuPlan(menuPlan, residentToAttend, cancellationToken);
-        }
         else
-        {
             await _menuPlannerService.AttendMenuPlan(menuPlan, residentToAttend, cancellationToken);
-        }
 
         return menuPlan;
     }
@@ -190,7 +199,8 @@ public class MenuPlanMutations
     [Error<NotFoundError>]
     [Error<EventIsInThePastError>]
     [Authorize]
-    public async Task<MenuPlan> UpsertGuests([Service] ITopicEventSender eventSender, Guid menuPlanId, string houseNumber, int? numberOfChildGuests,
+    public async Task<MenuPlan> UpsertGuests([Service] ITopicEventSender eventSender, Guid menuPlanId,
+        string houseNumber, int? numberOfChildGuests,
         int? numberOfAdultGuests, CancellationToken cancellationToken = default)
     {
         if (numberOfChildGuests is < 0) throw new InvalidInputError(nameof(numberOfChildGuests));
@@ -226,10 +236,64 @@ public class MenuPlanMutations
         menuPlan.Guests = menuPlan.Guests.Where(g => g.NumberOfAdultGuests + g.NumberOfChildGuests > 0).ToArray();
 
         var updated = await _menuPlanRepository.Update(menuPlan, cancellationToken);
-        
+
         await eventSender.SendAsync(MenuPlanUpdatedEventMessage.Topic,
             new MenuPlanUpdatedEventMessage(menuPlan), cancellationToken);
-        
+
         return updated;
+    }
+
+    [Error<NotFoundError>]
+    public async Task<GenerateMenuPlanThumbnailResult> GenerateThumbnail(
+        [Service] IRecipeRepository recipeRepository,
+        [Service] IMenuPlanThumbnailCandidatesRepository thumbnailRepo,
+        GenerateMenuPlanThumbnails request,
+        CancellationToken cancellationToken = default)
+    {
+        var existingCandidates =
+            await thumbnailRepo.GetMenuPlanThumbnailCandidatesAsync(request.MenuPlanId, cancellationToken);
+        if (existingCandidates is not null)
+            return new GenerateMenuPlanThumbnailResult(existingCandidates.CandidateThumbnailUrls);
+
+        var menuPlan = await _menuPlanRepository.GetMenuPlanById(request.MenuPlanId, cancellationToken);
+        if (menuPlan is null) throw new NotFoundError(nameof(MenuPlan), request.MenuPlanId);
+
+        var recipes = await recipeRepository.GetRecipesAsync(menuPlan.RecipeIds, cancellationToken);
+        var imageUrls = await GenerateThumbnailsFor(menuPlan, recipes, request.NumberOfThumbnails,
+            new ImageDimensions(request.ThumbnailSize, request.ThumbnailSize), cancellationToken);
+        
+        await thumbnailRepo.CreateMenuPlanThumbnailCandidatesAsync(new MenuPlanThumbnailCandidates()
+        {
+            MenuPlanId = menuPlan.Id,
+            CandidateThumbnailUrls = imageUrls
+        }, cancellationToken);
+
+        return new(imageUrls);
+    }
+
+    private async Task<string[]> GenerateThumbnailsFor(MenuPlan menuPlan, IEnumerable<Recipe> recipes, int numberOfThumbnails, ImageDimensions? size = null, CancellationToken cancellationToken = default)
+    {
+        var prompt = GetMenuPlanImageGenerationPrompt(recipes);
+        if (prompt is null)
+            throw new InvalidInputError("Could not generate thumbnail for menu plan. No recipes found.");
+
+        var images = await _imageGenerationService.GenerateImageAsync(prompt, numberOfThumbnails,
+            size, cancellationToken);
+
+        // Copy all images to wwwroot
+        var baseDirectory =
+            await _blobService.CreateDirectoryIfNotExists(Path.Combine("menu-plans", menuPlan.Id.ToString()),
+                cancellationToken);
+
+        return await Task.WhenAll(images.Select(i =>
+            _blobService.CreateFileAsync(baseDirectory, $"{Guid.NewGuid()}.png", i, cancellationToken)));
+    }
+
+    private string? GetMenuPlanImageGenerationPrompt(IEnumerable<Recipe> recipes)
+    {
+        var mainRecipeName = recipes.FirstOrDefault(r => r.Category == "Main")?.Name;
+        if (!string.IsNullOrWhiteSpace(mainRecipeName)) return mainRecipeName;
+        var fallback = recipes.FirstOrDefault(r => !string.IsNullOrWhiteSpace(r.Name))?.Name;
+        return fallback;
     }
 }
