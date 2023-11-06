@@ -40,7 +40,7 @@ export const allResidents = graphQLSelector({
   environment: RelayEnvironment,
   query: graphql`
     query menuPlannerState_ResidentsQuery {
-      residents {
+      residents (first: 50) {
         nodes {
           id
           firstName
