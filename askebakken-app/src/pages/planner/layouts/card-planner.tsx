@@ -22,23 +22,18 @@ import {
   PopoverArrow,
   PopoverBody,
   PopoverHeader,
-  useToast,
-  IconButton,
-  HStack,
 } from "@chakra-ui/react";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
 import { Resident } from "../types";
 import { PlannerPageLayoutProviderProps } from "./planner-page-layout";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilValue } from "recoil";
 import { loggedInUser } from "../../../app-state/logged-in-user";
 import { ChefHatIcon } from "../../../components/chef-hat-icon";
 import { ToggleCookingCardButton } from "../components/join-cooking-card-button";
 
 import style from "./card-planner.module.css";
 import { CSSProperties } from "react";
-import { startDateState, endDateState } from "../menu-planner-state";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { FormatTime } from "../../../components/format-time";
+import { WeekNavigation } from "../components/week-navigation";
 
 export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
   return (
@@ -194,42 +189,5 @@ function CardAttendanceAvatar(props: {
         <PopoverBody>Uldalsvej {props.resident?.houseNumber}</PopoverBody>
       </PopoverContent>
     </Popover>
-  );
-}
-
-function WeekNavigation() {
-  const [startDate, setStartDate] = useRecoilState(startDateState);
-  const [endDate, setEndDate] = useRecoilState(endDateState);
-
-  function nextWeek() {
-    setStartDate(startDate.addDays(7));
-    setEndDate(endDate.addDays(7));
-    window.scrollTo(0, 0);
-  }
-
-  function previousWeek() {
-    setStartDate(startDate.addDays(-7));
-    setEndDate(endDate.addDays(-7));
-    window.scrollTo(0, 0);
-  }
-
-  return (
-    <HStack spacing={4}>
-      <IconButton
-        onClick={previousWeek}
-        icon={<ChevronLeftIcon />}
-        aria-label="Forrige uge"
-      />
-      <HStack spacing={2}>
-        <FormatTime value={startDate} />
-        <Text>-</Text>
-        <FormatTime value={endDate} />
-      </HStack>
-      <IconButton
-        onClick={nextWeek}
-        icon={<ChevronRightIcon />}
-        aria-label="Næste uge"
-      />
-    </HStack>
   );
 }

@@ -11,7 +11,7 @@ import { useRecoilValue } from "recoil";
 
 const residentsQuery = graphql`
   query residentSelectQuery {
-    residents {
+    residents (first: 50) {
       nodes {
         id
         firstName

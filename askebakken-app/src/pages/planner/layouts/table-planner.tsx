@@ -30,6 +30,7 @@ import {
 import style from "./table-planner.module.css";
 import { devicePreferences } from "../../../app-state/device-preferences";
 import { useMemo } from "react";
+import { WeekNavigation } from "../components/week-navigation";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
 
@@ -46,104 +47,110 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
   );
 
   return (
-    <TableContainer margin={4}>
-      <Table className={style.plannerTable} size="sm">
-        <Thead>
-          <Tr>
-            <Th colSpan={2}>
-              <Center>Uge</Center>
-            </Th>
+    <Stack>
+      <TableContainer margin={4}>
+        <Table className={style.plannerTable} size="sm">
+          <Thead>
+            <Tr>
+              <Th colSpan={2}>
+                <Center>Uge</Center>
+              </Th>
 
-            {props.menuPlans.map((d) => (
-              <Td key={`name-${d.date.getDayOfYear()}`}>
-                <Stack padding={4}>
-                  <Center>
-                    <Box fontWeight="bold">{d.date.getDanishWeekday()}</Box>
-                  </Center>
-                  <Center>
-                    <Box>{d.date.toLocaleDateString()}</Box>
-                  </Center>
-                </Stack>
-              </Td>
-            ))}
-          </Tr>
-          <Tr>
-            <Th colSpan={2}>
-              <Center>Menu</Center>
-            </Th>
-            {props.menuPlans.map((d) => (
-              <Td key={`menu-${d.date.getDayOfYear()}`}>
-                <Center>
-                  {d.recipes ? (
-                    <Recipes recipes={d.recipes} />
-                  ) : (
-                    <Text fontStyle="italic">Intet planlagt</Text>
-                  )}
-                </Center>
-              </Td>
-            ))}
-          </Tr>
-          <Tr>
-            <Th colSpan={2}>
-              <Center>{props.menuPlans[0].date.getWeek()}</Center>
-            </Th>
-            {props.menuPlans.map((d) => (
-              <Th key={`categories-${d.date.getDayOfYear()}`}>
-                <PlannerTableEntry entries={participantCategories} />
-              </Th>
-            ))}
-          </Tr>
-        </Thead>
-        <Tbody>
-          {housesToDisplay.map((house) => (
-            <PlannerTableHouseEntry
-              key={house}
-              house={house}
-              residents={props.residentsByHouse?.get(house) ?? []}
-            />
-          ))}
-        </Tbody>
-        <Tfoot>
-          <Tr borderBottom="2px solid black" borderTop="3px solid black">
-            <Th colSpan={2} background="gray.100">
-              <Center>Total</Center>
-            </Th>
-            {props.menuPlans.map((d) => (
-              <Th key={`total-${d.date.getDayOfYear()}`}>
-                <PlannerTableEntry
-                  entries={[
-                    <Stack width="100%" padding="0 8px">
-                      <Flex justify="space-between">
-                        <Box>Voksne:</Box>
-                        <Box>
-                          {d.participants.filter((p) =>
-                            p ? !props.residentById?.get(p.id)?.child : false
-                          )?.length ?? 0}
-                        </Box>
-                      </Flex>
-                      <Flex justify="space-between">
-                        <Box>Børn:</Box>
-                        <Box>
-                          {d.participants.filter((p) =>
-                            p ? props.residentById?.get(p.id)?.child : false
-                          )?.length ?? 0}
-                        </Box>
-                      </Flex>
-                    </Stack>,
+              {props.menuPlans.map((d) => (
+                <Td key={`name-${d.date.getDayOfYear()}`}>
+                  <Stack padding={4}>
                     <Center>
-                      {d.guests?.sumBy((g) => g.numberOfAdultGuests) ?? 0}
-                    </Center>,
+                      <Box fontWeight="bold">{d.date.getDanishWeekday()}</Box>
+                    </Center>
                     <Center>
-                      {d.guests?.sumBy((g) => g.numberOfChildGuests) ?? 0}
-                    </Center>,
-                  ]}
-                />
+                      <Box>{d.date.toLocaleDateString()}</Box>
+                    </Center>
+                  </Stack>
+                </Td>
+              ))}
+            </Tr>
+            <Tr>
+              <Th colSpan={2}>
+                <Center>Menu</Center>
               </Th>
+              {props.menuPlans.map((d) => (
+                <Td key={`menu-${d.date.getDayOfYear()}`}>
+                  <Center>
+                    {d.recipes ? (
+                      <Recipes recipes={d.recipes} />
+                    ) : (
+                      <Text fontStyle="italic">Intet planlagt</Text>
+                    )}
+                  </Center>
+                </Td>
+              ))}
+            </Tr>
+            <Tr>
+              <Th colSpan={2}>
+                <Center>{props.menuPlans?.[0]?.date.getWeek() ?? ""}</Center>
+              </Th>
+              {props.menuPlans.map((d) => (
+                <Th key={`categories-${d.date.getDayOfYear()}`}>
+                  <PlannerTableEntry entries={participantCategories} />
+                </Th>
+              ))}
+            </Tr>
+          </Thead>
+          <Tbody>
+            {housesToDisplay.map((house) => (
+              <PlannerTableHouseEntry
+                key={house}
+                house={house}
+                residents={props.residentsByHouse?.get(house) ?? []}
+              />
             ))}
-          </Tr>
-        </Tfoot>
-      </Table>
-    </TableContainer>
+          </Tbody>
+          <Tfoot>
+            <Tr borderBottom="2px solid black" borderTop="3px solid black">
+              <Th colSpan={2} background="gray.100">
+                <Center>Total</Center>
+              </Th>
+              {props.menuPlans.map((d) => (
+                <Th key={`total-${d.date.getDayOfYear()}`}>
+                  <PlannerTableEntry
+                    entries={[
+                      <Stack width="100%" padding="0 8px">
+                        <Flex justify="space-between">
+                          <Box>Voksne:</Box>
+                          <Box>
+                            {d.participants.filter((p) =>
+                              p ? !props.residentById?.get(p.id)?.child : false
+                            )?.length ?? 0}
+                          </Box>
+                        </Flex>
+                        <Flex justify="space-between">
+                          <Box>Børn:</Box>
+                          <Box>
+                            {d.participants.filter((p) =>
+                              p ? props.residentById?.get(p.id)?.child : false
+                            )?.length ?? 0}
+                          </Box>
+                        </Flex>
+                      </Stack>,
+                      <Center>
+                        {d.guests?.sumBy((g) => g.numberOfAdultGuests) ?? 0}
+                      </Center>,
+                      <Center>
+                        {d.guests?.sumBy((g) => g.numberOfChildGuests) ?? 0}
+                      </Center>,
+                    ]}
+                  />
+                </Th>
+              ))}
+            </Tr>
+          </Tfoot>
+        </Table>
+      </TableContainer>
+
+      <Center>
+        <WeekNavigation />
+      </Center>
+    </Stack>
   );
 }
 

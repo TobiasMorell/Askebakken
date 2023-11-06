@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<d44a3c85d5f63f20832d808de924407f>>
+ * @generated SignedSource<<d6f3af8f85ebfba335749cac9d5a0a4a>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -29,7 +29,13 @@ const node: ConcreteRequest = (function(){
 var v0 = [
   {
     "alias": null,
-    "args": null,
+    "args": [
+      {
+        "kind": "Literal",
+        "name": "first",
+        "value": 50
+      }
+    ],
     "concreteType": "ResidentsConnection",
     "kind": "LinkedField",
     "name": "residents",
@@ -75,7 +81,7 @@ var v0 = [
         "storageKey": null
       }
     ],
-    "storageKey": null
+    "storageKey": "residents(first:50)"
   }
 ];
 return {
@@ -96,16 +102,16 @@ return {
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "f6f16c1e8a9ad76aa66cf8cb8a6ac502",
+    "cacheID": "2e1dd8adf6b3aeab378d47d6e960c14d",
     "id": null,
     "metadata": {},
     "name": "residentSelectQuery",
     "operationKind": "query",
-    "text": "query residentSelectQuery {\n  residents {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n    }\n  }\n}\n"
+    "text": "query residentSelectQuery {\n  residents(first: 50) {\n    nodes {\n      id\n      firstName\n      lastName\n      houseNumber\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "8d3da7f3c006ca460364f55ccb603390";
+(node as any).hash = "fdaf1734f5c8f41764ca4244d271a774";
 
 export default node;
