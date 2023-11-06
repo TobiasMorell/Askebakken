@@ -10,29 +10,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 var authOptions = GetRequiredOptions<JwtAuthenticationOptions>(builder.Configuration);
 if (string.IsNullOrEmpty(authOptions.Secret))
-{
     throw new ApplicationException("JwtAuthenticationOptions.Secret is null. Please set them via appsettings");
-}
 
 builder.Services.AddJwtAuthentication(authOptions);
+builder.Services.AddLogging(o => o.AddDebug().AddConsole().AddConfiguration(builder.Configuration.GetSection("Logging"))
+    .SetMinimumLevel(LogLevel.Information)
+);
 
 var corsOptions = GetRequiredOptions<CorsOptions>(builder.Configuration);
 builder.Services.AddCors(cors =>
 {
     Console.WriteLine("Allowed origins: " + string.Join(", ", corsOptions.AllowedOrigins));
     if (!corsOptions.AllowedOrigins.Any())
-    {
         cors.AddDefaultPolicy(corsBuilder => { corsBuilder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); });
-    }
     else
-    {
         cors.AddDefaultPolicy(
             corsBuilder =>
             {
                 corsBuilder.WithOrigins(corsOptions.AllowedOrigins).AllowAnyHeader().AllowAnyMethod()
                     .AllowCredentials();
             });
-    }
 });
 
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(nameof(EmailOptions)))
@@ -74,10 +71,7 @@ TOptions GetRequiredOptions<TOptions>(IConfiguration configuration)
 {
     var optionsName = typeof(TOptions).Name;
     var options = configuration.GetSection(optionsName).Get<TOptions>();
-    if (options is null)
-    {
-        throw new ApplicationException($"{optionsName} is null. Please set them via appsettings");
-    }
+    if (options is null) throw new ApplicationException($"{optionsName} is null. Please set them via appsettings");
 
     return options;
 }

@@ -25,6 +25,8 @@ public class JwtTokenService : ITokenService
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenKey = Encoding.UTF8.GetBytes(_options.Secret);
+
+        var notBefore = DateTime.UtcNow;
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
@@ -33,6 +35,7 @@ public class JwtTokenService : ITokenService
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             }.Concat(user.Roles.Select(r => new Claim(ClaimTypes.Role, r)))),
             Expires = DateTime.UtcNow.AddMinutes(_options.ExpirationMinutes),
+            NotBefore = notBefore,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature),
             Issuer = _options.Issuer,
             Audience = _options.Audience,
