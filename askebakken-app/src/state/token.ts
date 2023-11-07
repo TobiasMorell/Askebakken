@@ -1,6 +1,5 @@
-import { atom } from "recoil";
-
 const LOCAL_STORAGE_TOKEN_KEY = "authToken";
+
 export function getAuthToken() {
   return localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
 }
