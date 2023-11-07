@@ -7,6 +7,7 @@ using Askebakken.GraphQL.Schema.Mutations;
 using Askebakken.GraphQL.Services;
 using Askebakken.GraphQL.Services.PasswordHasher;
 using Askebakken.GraphQL.Tests.Fakes;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Askebakken.GraphQL.Tests;
 
@@ -282,6 +283,6 @@ public class ResidentMutationsTests
             Issuer = "https://unit.tests",
             ExpirationMinutes = 60,
             ValidateSigningKey = true
-        });
+        }, new NullLoggerFactory());
     }
 }

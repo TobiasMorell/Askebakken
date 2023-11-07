@@ -106,7 +106,7 @@ function UpdatePassword(props: { username: string }) {
       }
     `);
 
-  function login() {
+  function changePassword() {
     if (!currentPassword) {
       currentPasswordRef.current?.focus();
       return;
@@ -157,7 +157,7 @@ function UpdatePassword(props: { username: string }) {
 
   const changePasswordOnEnter: KeyboardEventHandler = (e) => {
     if (e.code === "Enter") {
-      login();
+      changePassword();
     }
   };
 
@@ -205,6 +205,7 @@ function UpdatePassword(props: { username: string }) {
                 loading
               }
               isLoading={loading}
+              onClick={changePassword}
             >
               Opdater
             </Button>

@@ -15,14 +15,18 @@ public interface ITokenService
 public class JwtTokenService : ITokenService
 {
     private readonly JwtAuthenticationOptions _options;
+    private readonly ILogger _logger;
 
-    public JwtTokenService(JwtAuthenticationOptions options)
+    public JwtTokenService(JwtAuthenticationOptions options, ILoggerFactory loggerFactory)
     {
         _options = options;
+        _logger = loggerFactory.CreateLogger<JwtTokenService>();
     }
 
     public string GetToken(Resident user)
     {
+        _logger.LogInformation("Creating JWT token for user {Username} with expiry {Expiry}", user.Username, DateTime.UtcNow.AddMinutes(_options.ExpirationMinutes));
+        
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenKey = Encoding.UTF8.GetBytes(_options.Secret);
 
