@@ -187,53 +187,59 @@ function FoodTeamWeekPlanTable(props: {
           </Tr>
         </Thead>
         <Tbody>
-          {props.daysInWeek.map((day) => (
-            <Tr key={`${props.week}-${day.date.getDay()}`}>
-              <Td>
-                <Stack>
-                  <Text fontWeight="bold">{day.date.getDanishWeekday()}</Text>
-                  <Text>{day.date.toLocaleDateString()}</Text>
-                </Stack>
-              </Td>
-              <Td>
-                <Stack>
-                  {day.plan?.recipes.map((r) => (
-                    <Text key={r.id}>{r.name}</Text>
-                  ))}
-                </Stack>
-              </Td>
-              <Td>
-                <Stack>
-                  {day.plan?.chefs?.map((c) => (
-                    <Flex key={c.id} justify="space-between">
-                      <Center>
-                        <Text>
-                          {c.firstName} {c.lastName}
-                        </Text>
-                      </Center>
-                      <RemoveFromCookingButton
-                        residentId={c.id}
-                        menuPlanId={day.plan?.id}
+          {props.daysInWeek.map((day) => {
+            const maxNumberOfChefs = day.plan?.date.getDay() == 5 ? 3 : 2;
+            const hasRoomForMoreChefs =
+              (day.plan?.chefs?.length ?? 0) < maxNumberOfChefs;
+
+            return (
+              <Tr key={`${props.week}-${day.date.getDay()}`}>
+                <Td>
+                  <Stack>
+                    <Text fontWeight="bold">{day.date.getDanishWeekday()}</Text>
+                    <Text>{day.date.toLocaleDateString()}</Text>
+                  </Stack>
+                </Td>
+                <Td>
+                  <Stack>
+                    {day.plan?.recipes.map((r) => (
+                      <Text key={r.id}>{r.name}</Text>
+                    ))}
+                  </Stack>
+                </Td>
+                <Td>
+                  <Stack>
+                    {day.plan?.chefs?.map((c) => (
+                      <Flex key={c.id} justify="space-between">
+                        <Center>
+                          <Text>
+                            {c.firstName} {c.lastName}
+                          </Text>
+                        </Center>
+                        <RemoveFromCookingButton
+                          residentId={c.id}
+                          menuPlanId={day.plan?.id}
+                          date={day.date}
+                          onUserRemovedFromNewDate={(user) =>
+                            props.onUserRemovedFromNewPlan(day.date, user)
+                          }
+                        />
+                      </Flex>
+                    ))}
+                    {hasRoomForMoreChefs && (
+                      <JoinCookingButton
                         date={day.date}
-                        onUserRemovedFromNewDate={(user) =>
-                          props.onUserRemovedFromNewPlan(day.date, user)
+                        menuPlanId={day.plan?.id}
+                        onUserJoinedNewDate={(user) =>
+                          props.onUserSignedUpToNewPlan(day.date, user)
                         }
                       />
-                    </Flex>
-                  ))}
-                  {(day.plan?.chefs?.length ?? 0) < 2 && (
-                    <JoinCookingButton
-                      date={day.date}
-                      menuPlanId={day.plan?.id}
-                      onUserJoinedNewDate={(user) =>
-                        props.onUserSignedUpToNewPlan(day.date, user)
-                      }
-                    />
-                  )}
-                </Stack>
-              </Td>
-            </Tr>
-          ))}
+                    )}
+                  </Stack>
+                </Td>
+              </Tr>
+            );
+          })}
         </Tbody>
       </Table>
     </TableContainer>

@@ -130,6 +130,7 @@ public class MenuPlanMutations
         CancellationToken cancellationToken = default)
     {
         if (date.Date < DateTime.Today) throw new EventIsInThePastError();
+        if (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday) throw new NoCommonDinnerOnWeekendsError();
 
         var chef = residentId.HasValue
             ? await _residentRepository.GetResidentById(residentId.Value, cancellationToken)
@@ -149,7 +150,7 @@ public class MenuPlanMutations
         {
             return existingPlan;
         }
-        else if (existingPlan.ChefIds is { Count: >= 2 })
+        else if (HasEnoughCooks(existingPlan))
         {
             throw new TooManyCooksError();
         }
@@ -158,6 +159,16 @@ public class MenuPlanMutations
         await _menuPlannerService.AttendMenuPlan(existingPlan, chef, cancellationToken);
 
         return existingPlan;
+    }
+
+    private bool HasEnoughCooks(MenuPlan existingPlan)
+    {
+        if (existingPlan.Date.DayOfWeek == DayOfWeek.Friday)
+        {
+            return existingPlan.ChefIds is { Count: >= 3 };
+        }
+
+        return existingPlan.ChefIds is { Count: >= 2 };
     }
 
     [Error<NotFoundError>]
