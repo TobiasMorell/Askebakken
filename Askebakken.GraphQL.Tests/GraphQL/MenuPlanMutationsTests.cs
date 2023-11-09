@@ -1,3 +1,4 @@
+using Askebakken.GraphQL.Extensions;
 using Askebakken.GraphQL.Schema;
 using Askebakken.GraphQL.Schema.Errors;
 using Askebakken.GraphQL.Schema.Inputs;
@@ -114,12 +115,13 @@ public class MenuPlanMutationsTests
     }
 
     [Fact]
-    public async Task SignUpForCooking_throws_TooManyCooksError_when_the_third_cook_tries_to_join()
+    public async Task SignUpForCooking_throws_TooManyCooksError_when_the_third_cook_tries_to_join_on_a_Thursday()
     {
         // Arrange
+        var date = DateTime.UtcNow.Next(DayOfWeek.Thursday);
         var menuPlan = new MenuPlan()
         {
-            Id = Guid.NewGuid(), Date = DateTime.UtcNow, ChefIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
+            Id = Guid.NewGuid(), Date = date, ChefIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
         };
         _menuPlanRepository.AddMockData(menuPlan);
         var chefId = Guid.NewGuid();
@@ -127,6 +129,48 @@ public class MenuPlanMutationsTests
 
         // Act and assert
         await Should.ThrowAsync<TooManyCooksError>(() => _mutations.SignUpForCooking(menuPlan.Date, chefId));
+    }
+
+    [Fact]
+    public async Task SignUpForCooking_accepts_three_cooks_on_a_Friday()
+    {
+        // Arrange
+        var date = DateTime.UtcNow.Next(DayOfWeek.Friday);
+        var menuPlan = new MenuPlan()
+        {
+            Id = Guid.NewGuid(), Date = date, ChefIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
+        };
+        _menuPlanRepository.AddMockData(menuPlan);
+        var chef = GenerateSampleResident(Guid.NewGuid());
+        _residentRepository.AddMockData(chef);
+
+        // Act
+        await _mutations.SignUpForCooking(menuPlan.Date, chef.Id);
+        
+        // Assert
+        _menuPlannerService.Verify(mps => mps.SignUpForCooking(menuPlan, chef, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _menuPlannerService.Verify(mps => mps.AttendMenuPlan(menuPlan, chef, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(DayOfWeek.Saturday)]
+    [InlineData(DayOfWeek.Sunday)]
+    public async Task SignUpForCooking_throws_NoCommonDinnerOnWeekendsError_if_date_is_a_weekend(DayOfWeek day)
+    {
+        // Arrange
+        var date = DateTime.UtcNow.Next(day);
+        var menuPlan = new MenuPlan()
+        {
+            Id = Guid.NewGuid(), Date = date, ChefIds = new[] { Guid.NewGuid(), Guid.NewGuid() }
+        };
+        _menuPlanRepository.AddMockData(menuPlan);
+        var chefId = Guid.NewGuid();
+        _residentRepository.AddMockData(GenerateSampleResident(chefId));
+
+        // Act and assert
+        await Should.ThrowAsync<NoCommonDinnerOnWeekendsError>(() => _mutations.SignUpForCooking(menuPlan.Date, chefId));
     }
 
     [Fact]
