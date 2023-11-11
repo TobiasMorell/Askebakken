@@ -1,5 +1,17 @@
 import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
-import { AbsoluteCenter, Box, ChakraProvider, Spinner } from "@chakra-ui/react";
+import {
+  AbsoluteCenter,
+  Box,
+  Button,
+  Center,
+  ChakraProvider,
+  Flex,
+  Heading,
+  Spinner,
+  Stack,
+  Text,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { LoginPage } from "./pages/login/login-page";
 import { Suspense, useEffect } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
@@ -11,7 +23,6 @@ import { clearAuthToken, getAuthToken } from "./state/token";
 import { RecoilRoot } from "recoil";
 import TopBar from "./components/top-bar";
 import React from "react";
-import { CalendarIcon } from "@chakra-ui/icons";
 
 const PlannerPage = React.lazy(() => import("./pages/planner/planner-page"));
 
@@ -110,6 +121,10 @@ function Layout() {
 function Fallback(props: FallbackProps) {
   const [hasNavigated, setHasNavigated] = React.useState(false);
 
+  const reload = () => {
+    window.location.reload();
+  };
+
   useEffect(() => {
     const errors:
       | [{ message: string; extensions: { code: string } }]
@@ -131,11 +146,48 @@ function Fallback(props: FallbackProps) {
     }
   }, [props.error]);
 
+  if (hasNavigated) {
+    return null;
+  }
+
   return (
-    <div role="alert">
-      <p>Something went wrong:</p>
-      <pre style={{ color: "red" }}>{props.error.message}</pre>
-    </div>
+    <Flex
+      minH={"100vh"}
+      align={"center"}
+      justify={"center"}
+      bg={useColorModeValue("gray.50", "gray.800")}
+    >
+      <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
+        <Stack
+          rounded={"lg"}
+          bg={useColorModeValue("white", "gray.700")}
+          boxShadow={"lg"}
+          p={8}
+          spacing="4"
+        >
+          <Stack>
+            <Heading fontSize={"xl"}>Der skete en fejl</Heading>
+          </Stack>
+
+          <Box>
+            <Text color="red">{props.error.message}</Text>
+          </Box>
+
+          <Box>
+            <Text>
+              Hvis denne fejl fortsætter, så kontakt venligst Tobias og bed ham
+              om at fikse den!
+            </Text>
+          </Box>
+
+          <Center>
+            <Button onClick={reload} colorScheme="green">
+              Genindlæs
+            </Button>
+          </Center>
+        </Stack>
+      </Stack>
+    </Flex>
   );
 }
 

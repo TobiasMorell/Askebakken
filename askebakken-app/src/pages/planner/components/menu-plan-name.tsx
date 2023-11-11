@@ -4,7 +4,7 @@ import { menuPlanCategories } from "../../../menu-plan-categories";
 
 export function MenuPlanName(props: {
   menuPlan: PlannerPageLayoutProviderProps["menuPlans"][0];
-}): React.ReactNode {
+}): JSX.Element {
   const { recipes } = props.menuPlan;
   const recipeByCategory = useMemo(
     () => recipes.toDictionary((r) => r.category),

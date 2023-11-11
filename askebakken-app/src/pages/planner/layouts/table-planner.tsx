@@ -10,7 +10,6 @@ import {
   Tbody,
   Tfoot,
   Flex,
-  Text,
   Box,
   Image,
   IconButton,
@@ -24,10 +23,6 @@ import {
   ModalHeader,
   ModalOverlay,
   AspectRatio,
-  FormControl,
-  FormLabel,
-  Input,
-  Select,
 } from "@chakra-ui/react";
 import { useRecoilValue } from "recoil";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
@@ -90,9 +85,9 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
     <Stack>
       <TableContainer margin={2} overflowY="unset" overflowX="unset">
         <Table className={style.plannerTable} size="sm">
-          <Thead position="sticky" top={0} zIndex="docked">
+          <Thead position="sticky" top={0} zIndex="docked" boxShadow="sm">
             <Tr>
-              <Th colSpan={2}>
+              <Th colSpan={2} boxShadow="1">
                 <Center>Uge</Center>
               </Th>
 
@@ -134,31 +129,27 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
             ))}
           </Tbody>
           <Tfoot>
-            <Tr borderBottom="2px solid black" borderTop="3px solid black">
-              <Th colSpan={2} background="gray.100">
+            <Tr borderTop="3px solid black">
+              <Td colSpan={2} borderBottomWidth={1}>
                 <Center>Total</Center>
-              </Th>
+              </Td>
               {props.menuPlans.map((d) => {
                 const [totalAdultParticipants, totalChildParticipants] =
                   useParticipantCount(d, props.residentById);
 
                 return (
-                  <Th key={`total-${d.date.getDayOfYear()}`}>
-                    <PlannerTableEntry
-                      entries={[
-                        <Stack width="100%" padding="0 8px">
-                          <Flex justify="space-between">
-                            <Box>Voksne:</Box>
-                            <Box>{totalAdultParticipants}</Box>
-                          </Flex>
-                          <Flex justify="space-between">
-                            <Box>Børn:</Box>
-                            <Box>{totalChildParticipants}</Box>
-                          </Flex>
-                        </Stack>,
-                      ]}
-                    />
-                  </Th>
+                  <Td key={`total-${d.date.getDayOfYear()}`}>
+                    <Stack width="100%" padding="0 16px">
+                      <Flex justify="space-between">
+                        <Box>Voksne:</Box>
+                        <Box>{totalAdultParticipants}</Box>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Box>Børn:</Box>
+                        <Box>{totalChildParticipants}</Box>
+                      </Flex>
+                    </Stack>
+                  </Td>
                 );
               })}
             </Tr>
@@ -237,25 +228,6 @@ function ResidentRowEntries(props: ResidentRowEntriesProps) {
         </Td>
       ))}
     </>
-  );
-}
-
-function PlannerTableEntry(props: { entries: Readonly<React.ReactNode[]> }) {
-  return (
-    <Flex height="100%">
-      {props.entries.map((e, idx) => (
-        <Box
-          flex="1"
-          borderLeft={idx > 0 ? "1px" : undefined}
-          borderRight={idx < props.entries.length - 1 ? "1px" : undefined}
-          borderColor="black"
-          padding="4px"
-          key={idx}
-        >
-          <Center height="100%">{e}</Center>
-        </Box>
-      ))}
-    </Flex>
   );
 }
 
