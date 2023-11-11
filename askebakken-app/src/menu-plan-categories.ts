@@ -1,0 +1,1 @@
+export const menuPlanCategories = ["main", "veggies", "side", "sauce"] as const;

@@ -34,6 +34,7 @@ import { ToggleCookingCardButton } from "../components/join-cooking-card-button"
 import style from "./card-planner.module.css";
 import { CSSProperties } from "react";
 import { WeekNavigation } from "../components/week-navigation";
+import { MenuPlanName } from "../components/menu-plan-name";
 
 export function CardBasedPlanner(props: PlannerPageLayoutProviderProps) {
   return (
@@ -64,10 +65,7 @@ function CardPlannerGardGrid(props: PlannerPageLayoutProviderProps) {
             <CardBody>
               <Stack mt="6">
                 <Heading size="sm">
-                  {d.recipes
-                    .filter((r) => r.name.length > 0)
-                    .map((r) => r.name)
-                    .join(" | ")}
+                  <MenuPlanName menuPlan={d} />
                 </Heading>
                 <Text color="gray.400">{`${d.date.getDanishWeekday()}, ${d.date.toLocaleDateString()}`}</Text>
               </Stack>

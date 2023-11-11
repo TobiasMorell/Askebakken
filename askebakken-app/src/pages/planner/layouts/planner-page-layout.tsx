@@ -12,5 +12,3 @@ export type PlannerPageLayoutProviderProps = {
   residentsByHouse?: Map<string, Resident[]>;
   residentById?: Map<string, Resident>;
 };
-
-export const participantCategories = ["Voksen", "Voksen gæst", "Barn gæst"] as const;

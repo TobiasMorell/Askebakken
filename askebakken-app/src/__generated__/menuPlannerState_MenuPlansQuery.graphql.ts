@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<31edb21414b4537df51e911a9d7830d6>>
+ * @generated SignedSource<<37b5c063c37ae305f3b5c34da9a95660>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -30,6 +30,7 @@ export type menuPlannerState_MenuPlansQuery$data = {
         readonly id: any;
       }>;
       readonly recipes: ReadonlyArray<{
+        readonly category: string;
         readonly id: any;
         readonly name: string;
       }>;
@@ -157,6 +158,13 @@ v4 = [
                 "kind": "ScalarField",
                 "name": "name",
                 "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "category",
+                "storageKey": null
               }
             ],
             "storageKey": null
@@ -244,16 +252,16 @@ return {
     "selections": (v4/*: any*/)
   },
   "params": {
-    "cacheID": "fb4643451c37a5307fb48133ac00b46b",
+    "cacheID": "30c9c5d1cdf1a3502fd22fe3a1413466",
     "id": null,
     "metadata": {},
     "name": "menuPlannerState_MenuPlansQuery",
     "operationKind": "query",
-    "text": "query menuPlannerState_MenuPlansQuery(\n  $startDate: DateTime!\n  $endDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      thumbnail\n      recipes {\n        id\n        name\n      }\n      participants {\n        id\n      }\n      chefs {\n        id\n      }\n      guests {\n        houseNumber\n        numberOfAdultGuests\n        numberOfChildGuests\n      }\n    }\n  }\n}\n"
+    "text": "query menuPlannerState_MenuPlansQuery(\n  $startDate: DateTime!\n  $endDate: DateTime!\n) {\n  menuPlan(where: {and: [{date: {gte: $startDate}}, {date: {lte: $endDate}}]}) {\n    nodes {\n      id\n      date\n      thumbnail\n      recipes {\n        id\n        name\n        category\n      }\n      participants {\n        id\n      }\n      chefs {\n        id\n      }\n      guests {\n        houseNumber\n        numberOfAdultGuests\n        numberOfChildGuests\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "d2745029de9c9dd23531db37ae719e31";
+(node as any).hash = "816b01320d0783eb7eac4b80a9af268f";
 
 export default node;

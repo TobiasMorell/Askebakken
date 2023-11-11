@@ -94,6 +94,7 @@ export const menuPlanParticipantsState = graphQLSelectorFamily({
           recipes {
             id
             name
+            category
           }
           participants {
             id
