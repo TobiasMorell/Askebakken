@@ -1,5 +1,5 @@
 .plannerTable {
-  border-collapse: separate;
+  border-collapse: separate !important;
   border-spacing: 0;
 }
 

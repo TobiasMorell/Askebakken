@@ -85,7 +85,7 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
     <Stack>
       <TableContainer margin={2} overflowY="unset" overflowX="unset">
         <Table className={style.plannerTable} size="sm">
-          <Thead position="sticky" top={0} zIndex="docked" boxShadow="sm">
+          <Thead position="sticky" top={0} zIndex="docked" boxShadow="md">
             <Tr>
               <Th colSpan={2} boxShadow="1">
                 <Center>Uge</Center>
