@@ -47,6 +47,7 @@ import {
   createMenuPlanPageMutation$variables,
 } from "../../__generated__/createMenuPlanPageMutation.graphql";
 import { getWeekDates } from "../../utils/date-utils";
+import { menuPlanCategories } from "../../menu-plan-categories";
 
 type MenuPlanWithOptionalId = Omit<MenuPlan, "id"> & { id: string | undefined };
 
@@ -423,7 +424,7 @@ function DayPlan(props: {
             <Text>{props.date.toLocaleDateString()}</Text>
           </Stack>
         </Td>
-        {["main", "veggies", "side", "sauce"].map((cat) => (
+        {menuPlanCategories.map((cat) => (
           <Td key={cat}>
             <Input
               value={recipes?.get(cat)?.name ?? ""}

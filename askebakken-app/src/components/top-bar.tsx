@@ -58,7 +58,7 @@ export default function TopBar(props: { menuItems: TopBarLink[] }) {
 
   return (
     <>
-      <Box bg={useColorModeValue("green.100", "green.900")} px={4}>
+      <Box bg={useColorModeValue("green.100", "green.900")} px={4} position="sticky" zIndex="sticky">
         <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
           <Menu
             autoSelect={false}

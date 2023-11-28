@@ -11,28 +11,63 @@ import {
   Tfoot,
   Flex,
   Box,
-  Text,
+  Image,
+  IconButton,
+  useDisclosure,
+  Button,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  AspectRatio,
 } from "@chakra-ui/react";
 import { useRecoilValue } from "recoil";
 import { ToggleAttendanceButton } from "../../login/components/toggle-attendance-button";
-import { Recipes } from "../components/recipes";
-import { WeekPlanGuests } from "../components/week-plan-guests";
 import {
   loggedInUserHouse,
   selectedDaysWithParticipantsState,
 } from "../menu-planner-state";
 import { Resident } from "../types";
-import {
-  PlannerPageLayoutProviderProps,
-  participantCategories,
-} from "./planner-page-layout";
+import { PlannerPageLayoutProviderProps } from "./planner-page-layout";
 
 import style from "./table-planner.module.css";
 import { devicePreferences } from "../../../app-state/device-preferences";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WeekNavigation } from "../components/week-navigation";
+import { MenuPlanName } from "../components/menu-plan-name";
+import { CalendarIcon } from "@chakra-ui/icons";
+import { useDelayedAction } from "../../../hooks/useDelayedAction";
+import { AddGuestsForm } from "../components/week-plan-guests";
 
 // https://askebakken.dk/wp-content/uploads/2022/11/spiser-du-med.pdf
+
+function useParticipantCount(
+  d: PlannerPageLayoutProviderProps["menuPlans"][0],
+  residentById: PlannerPageLayoutProviderProps["residentById"]
+) {
+  const totalAdultParticipants = useMemo(() => {
+    const totalAdultResidents =
+      d.participants.filter((p) =>
+        p ? !residentById?.get(p.id)?.child : false
+      )?.length ?? 0;
+    const totalAdultGuests = d.guests?.sumBy((g) => g.numberOfAdultGuests) ?? 0;
+    return totalAdultResidents + totalAdultGuests;
+  }, [d, residentById]);
+
+  const totalChildParticipants = useMemo(() => {
+    const totalChildResidents =
+      d.participants.filter((p) => (p ? residentById?.get(p.id)?.child : false))
+        ?.length ?? 0;
+    const totalChildGuests = d.guests?.sumBy((g) => g.numberOfChildGuests) ?? 0;
+
+    return totalChildResidents + totalChildGuests;
+  }, [d, residentById]);
+
+  return [totalAdultParticipants, totalChildParticipants] as const;
+}
 
 export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
   const userHouse = useRecoilValue(loggedInUserHouse);
@@ -48,11 +83,11 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
 
   return (
     <Stack>
-      <TableContainer margin={4}>
+      <TableContainer margin={2} overflowY="unset" overflowX="unset">
         <Table className={style.plannerTable} size="sm">
-          <Thead>
+          <Thead position="sticky" top={0} zIndex="docked" boxShadow="md">
             <Tr>
-              <Th colSpan={2}>
+              <Th colSpan={2} boxShadow="1">
                 <Center>Uge</Center>
               </Th>
 
@@ -69,30 +104,18 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
                 </Td>
               ))}
             </Tr>
-            <Tr>
-              <Th colSpan={2}>
-                <Center>Menu</Center>
-              </Th>
-              {props.menuPlans.map((d) => (
-                <Td key={`menu-${d.date.getDayOfYear()}`}>
-                  <Center>
-                    {d.recipes ? (
-                      <Recipes recipes={d.recipes} />
-                    ) : (
-                      <Text fontStyle="italic">Intet planlagt</Text>
-                    )}
-                  </Center>
-                </Td>
-              ))}
-            </Tr>
+
             <Tr>
               <Th colSpan={2}>
                 <Center>{props.menuPlans?.[0]?.date.getWeek() ?? ""}</Center>
               </Th>
+
               {props.menuPlans.map((d) => (
-                <Th key={`categories-${d.date.getDayOfYear()}`}>
-                  <PlannerTableEntry entries={participantCategories} />
-                </Th>
+                <Td key={d.date.getDayOfYear()}>
+                  <Center>
+                    <OpenMenuPlanButton menuPlan={d} houses={props.houses} />
+                  </Center>
+                </Td>
               ))}
             </Tr>
           </Thead>
@@ -106,42 +129,29 @@ export function PlannerPageTable(props: PlannerPageLayoutProviderProps) {
             ))}
           </Tbody>
           <Tfoot>
-            <Tr borderBottom="2px solid black" borderTop="3px solid black">
-              <Th colSpan={2} background="gray.100">
+            <Tr borderTop="3px solid black">
+              <Td colSpan={2} borderBottomWidth={1}>
                 <Center>Total</Center>
-              </Th>
-              {props.menuPlans.map((d) => (
-                <Th key={`total-${d.date.getDayOfYear()}`}>
-                  <PlannerTableEntry
-                    entries={[
-                      <Stack width="100%" padding="0 8px">
-                        <Flex justify="space-between">
-                          <Box>Voksne:</Box>
-                          <Box>
-                            {d.participants.filter((p) =>
-                              p ? !props.residentById?.get(p.id)?.child : false
-                            )?.length ?? 0}
-                          </Box>
-                        </Flex>
-                        <Flex justify="space-between">
-                          <Box>Børn:</Box>
-                          <Box>
-                            {d.participants.filter((p) =>
-                              p ? props.residentById?.get(p.id)?.child : false
-                            )?.length ?? 0}
-                          </Box>
-                        </Flex>
-                      </Stack>,
-                      <Center>
-                        {d.guests?.sumBy((g) => g.numberOfAdultGuests) ?? 0}
-                      </Center>,
-                      <Center>
-                        {d.guests?.sumBy((g) => g.numberOfChildGuests) ?? 0}
-                      </Center>,
-                    ]}
-                  />
-                </Th>
-              ))}
+              </Td>
+              {props.menuPlans.map((d) => {
+                const [totalAdultParticipants, totalChildParticipants] =
+                  useParticipantCount(d, props.residentById);
+
+                return (
+                  <Td key={`total-${d.date.getDayOfYear()}`}>
+                    <Stack width="100%" padding="0 16px">
+                      <Flex justify="space-between">
+                        <Box>Voksne:</Box>
+                        <Box>{totalAdultParticipants}</Box>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Box>Børn:</Box>
+                        <Box>{totalChildParticipants}</Box>
+                      </Flex>
+                    </Stack>
+                  </Td>
+                );
+              })}
             </Tr>
           </Tfoot>
         </Table>
@@ -169,8 +179,6 @@ function PlannerTableHouseEntry(props: {
           entryClassName={
             props.residents.length > 1 ? style["no-bottom-border"] : undefined
           }
-          withGuests
-          houseNumber={props.house}
         />
       </Tr>
       {props.residents.slice(1).map((r, idx) => (
@@ -190,17 +198,9 @@ type ResidentRowEntriesProps = {
   resident: Resident;
   entryClassName?: string;
 };
-type ResidentRowEntriesPropsWithGuests = {
-  withGuests: true;
-  houseNumber: string;
-};
 
-function ResidentRowEntries(
-  props: ResidentRowEntriesProps & (ResidentRowEntriesPropsWithGuests | {})
-) {
+function ResidentRowEntries(props: ResidentRowEntriesProps) {
   const menuPlans = useRecoilValue(selectedDaysWithParticipantsState);
-
-  const guestProps = props as ResidentRowEntriesPropsWithGuests;
 
   return (
     <>
@@ -213,67 +213,97 @@ function ResidentRowEntries(
           className={props.entryClassName}
           key={`entries-${plan.date.getDayOfYear()}`}
         >
-          <PlannerTableEntry
-            entries={[
-              <Center>
-                <ToggleAttendanceButton
-                  participantIds={
-                    plan.participants
-                      .map((p) => p?.id)
-                      .filter((p) => !!p)
-                      .map((p) => p!) ?? []
-                  }
-                  userId={props.resident.id}
-                  menuPlanId={plan.id}
-                />
-              </Center>,
-              guestProps.withGuests ? (
-                <WeekPlanGuests
-                  for="ADULTS"
-                  defaultValue={
-                    plan.guests.find(
-                      (g) => g.houseNumber === guestProps.houseNumber
-                    )?.numberOfAdultGuests ?? 0
-                  }
-                  menuPlanId={plan.id}
-                  houseNumber={guestProps.houseNumber}
-                />
-              ) : null,
-              guestProps.withGuests ? (
-                <WeekPlanGuests
-                  for="CHILDREN"
-                  defaultValue={
-                    plan.guests.find(
-                      (g) => g.houseNumber === guestProps.houseNumber
-                    )?.numberOfChildGuests ?? 0
-                  }
-                  menuPlanId={plan.id}
-                  houseNumber={guestProps.houseNumber}
-                />
-              ) : null,
-            ]}
-          />
+          <Center>
+            <ToggleAttendanceButton
+              participantIds={
+                plan.participants
+                  .map((p) => p?.id)
+                  .filter((p) => !!p)
+                  .map((p) => p!) ?? []
+              }
+              userId={props.resident.id}
+              menuPlanId={plan.id}
+            />
+          </Center>
         </Td>
       ))}
     </>
   );
 }
 
-function PlannerTableEntry(props: { entries: Readonly<React.ReactNode[]> }) {
+function OpenMenuPlanButton(props: {
+  menuPlan: PlannerPageLayoutProviderProps["menuPlans"][0];
+  houses: string[];
+}) {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const { start, cancel, secondsRemaining } = useDelayedAction(15, onClose);
+
+  const [hasTouchedField, setHasTocuhedField] = useState(false);
+
+  const { menuPlan } = props;
+  const closeManual = () => {
+    cancel();
+    onClose();
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      start();
+    } else {
+      setHasTocuhedField(false);
+    }
+  }, [isOpen]);
+
+  const cancelAutoClose = () => {
+    cancel();
+    setHasTocuhedField(true);
+  };
+
   return (
-    <Flex height="100%">
-      {props.entries.map((e, idx) => (
-        <Box
-          borderLeft={idx > 0 ? "1px" : undefined}
-          borderRight={idx < props.entries.length - 1 ? "1px" : undefined}
-          borderColor="black"
-          padding="4px"
-          width="120px"
-          key={idx}
-        >
-          <Center height="100%">{e}</Center>
-        </Box>
-      ))}
-    </Flex>
+    <>
+      <IconButton
+        onClick={onOpen}
+        aria-label="Åben menuplan"
+        icon={<CalendarIcon />}
+      />
+      <Modal isOpen={isOpen} onClose={closeManual}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            Madplan for {menuPlan.date.getDanishWeekday()} d.{" "}
+            {menuPlan.date.toLocaleDateString()}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack spacing="8">
+              {menuPlan.thumbnail && (
+                <AspectRatio ratio={1}>
+                  <Image
+                    src={menuPlan.thumbnail ?? ""}
+                    alt="Der mangler et billede her"
+                  />
+                </AspectRatio>
+              )}
+
+              <Box>
+                <MenuPlanName menuPlan={menuPlan} />
+              </Box>
+
+              <AddGuestsForm
+                menuPlanId={menuPlan.id}
+                onFieldTouched={cancelAutoClose}
+                houses={props.houses}
+              />
+            </Stack>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={closeManual}>
+              Luk {hasTouchedField ? "" : `(${secondsRemaining})`}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }
